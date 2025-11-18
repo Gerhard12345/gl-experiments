@@ -39,7 +39,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Formatting with black8
       run: |
-        black src
+        black --check src
 
     - name: Test with pytest
       run: |
