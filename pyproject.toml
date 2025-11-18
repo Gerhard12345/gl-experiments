@@ -32,3 +32,6 @@ customgl = "src:shadow_mapping"
 
 [tool.setuptools.package-data]
 customgl = ["textures/**/*.png", "textures/**/*.jpg", "drawing/shaders/*.vert", "drawing/shaders/*.geom", "drawing/shaders/*.frag"]
+
+[tool.pytest.ini_options]
+testpaths =  ["tests"]
