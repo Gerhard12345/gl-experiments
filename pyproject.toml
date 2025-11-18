@@ -45,8 +45,6 @@ max-line-length = 145
 [tool.pylint.messages_control]
 disable = [
   "R0903",
-  "R0913",
-  "R0917",
   "C0115",
   "C0114"
 ]
