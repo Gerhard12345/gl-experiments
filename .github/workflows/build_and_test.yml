@@ -35,14 +35,14 @@ jobs:
         uv pip install --group pyproject.toml:lint
         uv pip install --group pyproject.toml:test
         uv pip install --group pyproject.toml:build
-      shell: bash
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
         source .venv/bin/activate
-        pylint --fail-under=6 src
+        pylint --fail-under=6 src/customgl
     - name: Formatting with black
       run: |
+        source .venv/bin/activate
         black --check src
 
     - name: Test with pytest
