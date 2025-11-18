@@ -90,8 +90,6 @@ class Renderer:
         self.height: int = 0
         self.framebuffer: CustomFrameBuffer = None
         self.shader: Shader = None
-        print(Path(__file__).parent)
-        print("!!!!!!!!!!!")
         self.base_directory: Path = Path(__file__).parent.parent
         self.shader_directory: Path = self.base_directory / "drawing" / "shaders"
 

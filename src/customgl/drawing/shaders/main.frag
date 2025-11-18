@@ -69,7 +69,7 @@ float is_in_shadow(vec4 fragment_position_in_light_space[N_DIRECTIONAL_LIGHTS], 
 
 float is_in_point_shadow(vec3 fragPos, vec3 normal, int component)
 {
-    float bias = max(0.05 * (1.0 - dot(normal, u_point_lights[component].position)), 0.015);
+    float bias = max(0.5 * (1.0 - dot(normal, u_point_lights[component].position)), 0.015);
     vec3 fragToLight = fragPos - u_point_lights[component].position;
     float currentDepth = length(fragToLight);
     int samples  = 20;

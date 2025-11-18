@@ -21,7 +21,7 @@ from .drawing.openglrenderer import (
     CommonShaderData,
 )
 
-SCALE = 2
+SCALE = 1.5
 
 
 # implementing a custom openGl widget
@@ -63,6 +63,7 @@ class GLWidget(QOpenGLWidget):
         print("done")
 
     def paintGL(self):
+        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
         glEnable(GL_DEPTH_TEST)
         self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
             shader=self.point_shadow_renderer.shader, omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer

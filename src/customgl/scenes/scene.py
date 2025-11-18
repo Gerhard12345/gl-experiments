@@ -411,9 +411,9 @@ class Scene4(Scene):
         )
         self.objects.append(r)
         room_definition = RoomDefinition(
-            x=12,
+            x=14,
             y=5.5,
-            z=12,
+            z=14,
             bottom_material=MuddyConcrete(texturescales=[2, 2 * 10 / 6]),
             top_material=WoodenCeiling(texturescales=[2, 2 * 10 / 6]),
             left_material=WornMetal(texturescales=[2 * 10 / 6, 2]),
@@ -453,17 +453,17 @@ class Scene4(Scene):
                 lights_quadratic,
             )
         ]
-        point_lights_position = [np.array([-11, 6, -11]), np.array([-11, -1, -11]), np.array([-11, 1, -11]), np.array([-11, -2, -11])]
-        lights_ambient = [[0.5, 0.5, 0.5]] * 4
-        lights_diffuse = [[0.4, 0.4, 0.4]] * 4
+        point_lights_position = [np.array([-11, 4, -11]), np.array([-11, 4, 11]), np.array([11, 4, -11]), np.array([11, 4, 11])]
+        lights_ambient = [[0.75, 0.75, 0.75]] * 4
+        lights_diffuse = [[1, 1, 1]] * 4
         lights_specular = [[1, 1, 1]] * 4
         lights_constant = [1] * 4
         lights_linear = [0.09] * 4
-        lights_quadratic = [0.0032] * 4
+        lights_quadratic = [0.032] * 4
         self.point_lights = [
             PointLight(
                 light_space_camera=[
-                    Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=25)
+                    Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=50)
                     for direction, up_vec in zip(
                         [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
                         [[0, -1, 0], [0, -1, 0], [0, 0, -1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
