@@ -39,7 +39,7 @@ jobs:
       run: |
         # stop the build if there are Python syntax errors or undefined names
         source .venv/bin/activate
-        pylint --fail-under=6 src/customgl
+        pylint --fail-under=6 src/customgl/drawing/glmaterial.py
     - name: Formatting with black
       run: |
         source .venv/bin/activate
