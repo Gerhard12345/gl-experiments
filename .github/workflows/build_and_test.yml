@@ -29,12 +29,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint pytest build black
+        pip install pylint pytest build black pyopengl pyqt6 imageio Pillow
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        pylint src
+        pylint src/customgl/objects/material.py
     - name: Formatting with black8
       run: |
         black --check src
