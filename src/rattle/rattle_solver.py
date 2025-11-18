@@ -37,9 +37,7 @@ class RollingSphereOnSurface:
             [
                 [1, 0],
                 [0, 1],
-                self.rattle.hamiltonian.algebraic_condition.surface.dq(
-                    self.rattle.q[0:2]
-                ),
+                self.rattle.hamiltonian.algebraic_condition.surface.dq(self.rattle.q[0:2]),
             ]
         )
         surface_normal = np.cross(surface_dq[:, 0], surface_dq[:, 1])
@@ -60,11 +58,7 @@ class RollingSphereOnParametricSurface:
         self.q_old = position
         hamiltonian = Hamiltonian(
             m=1.0,
-            algebraic_condition=AlgebraicCondition(
-                ParametricSurface(
-                    analytical_domain, parameter_manager, surface_f, surface_df
-                )
-            ),
+            algebraic_condition=AlgebraicCondition(ParametricSurface(analytical_domain, parameter_manager, surface_f, surface_df)),
         )
         self.rattle = Rattle(
             hamiltonian=hamiltonian,
@@ -87,9 +81,7 @@ class RollingSphereOnParametricSurface:
             [
                 [1, 0],
                 [0, 1],
-                self.rattle.hamiltonian.algebraic_condition.surface.dq(
-                    self.rattle.q[0:2]
-                ),
+                self.rattle.hamiltonian.algebraic_condition.surface.dq(self.rattle.q[0:2]),
             ]
         )
         surface_normal = np.cross(surface_dq[:, 0], surface_dq[:, 1])
