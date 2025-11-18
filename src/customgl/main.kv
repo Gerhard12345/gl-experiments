@@ -1,0 +1,63 @@
+<MyLargeWindow>:
+    layout:layout
+    win:win
+    canvas.before:
+        Color:
+            rgb: 0.5, 0.5, 0.5
+        Rectangle:
+            pos:(0, 0)
+            size:self.size
+        Color:
+            rgb:1, 1, 1
+    BoxLayout:
+        id:layout
+        orientation:"vertical"
+        MyWindow:
+            id:win
+            size_hint_x:1
+            size_hint_y:0.8
+        AnchorLayout:
+            size_hint_y:0.2
+            anchor_x:"center"
+            GridLayout:
+                slider:slider
+                rows:3
+                cols:6
+                size_hint_x:0.95
+                size_hint_y:0.7
+                Slider:
+                    id:slider
+                    min:0
+                    max:3
+                    step:1
+                Button:
+                    text:"start"
+                    on_press: root.win.start()
+                Label:
+                    text:"pos_hint"
+                Label:
+                Label:
+                Label:
+                Label:
+                Button:
+                    text:"camera up"
+                    on_press: root.win.scene.camera.rotate_theta(-2.0),
+                Label:
+                Button:
+                    text:"light left"
+                    on_press:root.win.change_light_component(0, -0.25, self.parent.slider.value)
+                Button:
+                    text:"light down"
+                    on_press:root.win.change_light_component(1, -0.25, self.parent.slider.value)
+                Button:
+                    text:"light right"
+                    on_press:root.win.change_light_component(0, 0.25, self.parent.slider.value)
+                Button:
+                    text:"camera left"
+                    on_press:root.win.scene.camera.rotate_phi(-2.0)
+                Button
+                    text:"camera down"
+                    on_press: root.win.scene.camera.rotate_theta(2.0)
+                Button:
+                    text:"camera right"
+                    on_press:root.win.scene.camera.rotate_phi(2.0)
