@@ -411,13 +411,13 @@ class Scene4(Scene):
         )
         self.objects.append(r)
         room_definition = RoomDefinition(
-            x=14,
+            x=12,
             y=5.5,
-            z=14,
-            bottom_material=MuddyConcrete(texturescales=[2, 2 * 10 / 6]),
-            top_material=WoodenCeiling(texturescales=[2, 2 * 10 / 6]),
-            left_material=WornMetal(texturescales=[2 * 10 / 6, 2]),
-            right_material=WornMetal(texturescales=[2 * 10 / 6, 2]),
+            z=12,
+            bottom_material=MuddyConcrete(texturescales=[2, 2 * 12 / 5.5]),
+            top_material=WoodenCeiling(texturescales=[2, 2 * 12 / 5.5]),
+            left_material=WornMetal(texturescales=[2 * 12 / 5.5, 2]),
+            right_material=WornMetal(texturescales=[2 * 12 / 5.5, 2]),
             front_material=WornMetal(texturescales=[2, 2]),
             back_material=WornMetal(texturescales=[2, 2]),
             position=[0, 2.5, 0],
@@ -453,7 +453,7 @@ class Scene4(Scene):
                 lights_quadratic,
             )
         ]
-        point_lights_position = [np.array([-11, 4, -11]), np.array([-11, 4, 11]), np.array([11, 4, -11]), np.array([11, 4, 11])]
+        point_lights_position = [np.array([-11, 1, -11]), np.array([-11, 1, 11]), np.array([11, 1, -11]), np.array([11, 1, 11])]
         lights_ambient = [[0.75, 0.75, 0.75]] * 4
         lights_diffuse = [[1, 1, 1]] * 4
         lights_specular = [[1, 1, 1]] * 4
@@ -466,7 +466,7 @@ class Scene4(Scene):
                     Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=50)
                     for direction, up_vec in zip(
                         [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
-                        [[0, -1, 0], [0, -1, 0], [0, 0, -1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
+                        [[0, -1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
                     )
                 ],
                 ambient=light_ambient,
