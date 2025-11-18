@@ -29,13 +29,18 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint pytest build black pyopengl pyqt6 imageio Pillow
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install uv
+        uv venv
+        source .venv/bin/activate
+        uv pip install --group pyproject.toml:lint
+        uv pip install --group pyproject.toml:test
+        uv pip install --group pyproject.toml:build
+      shell: bash
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
         pylint --fail-under=6 src
-    - name: Formatting with black8
+    - name: Formatting with black
       run: |
         black --check src
 
