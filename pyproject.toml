@@ -38,3 +38,6 @@ testpaths =  ["tests"]
 
 [tool.black]
 line-length = 145
+
+[tool.pylint.format]
+max-line-length = 145
