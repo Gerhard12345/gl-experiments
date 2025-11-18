@@ -1,5 +1,5 @@
 from pathlib import Path
-from customgl.objects.material import Material
+from src.customgl.objects.material import Material
 
 class TestMaterial:
     def setup_method(self):
