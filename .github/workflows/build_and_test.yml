@@ -35,6 +35,7 @@ jobs:
         uv pip install --group pyproject.toml:lint
         uv pip install --group pyproject.toml:test
         uv pip install --group pyproject.toml:build
+        uv pip install -r pyproject.toml
     - name: Lint with pylint
       run: |
         # stop the build if there are Python syntax errors or undefined names
