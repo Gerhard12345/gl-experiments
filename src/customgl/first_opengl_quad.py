@@ -46,7 +46,7 @@ class GLWidget(QOpenGLWidget):
         glClearColor(0.0, 1.0, 1.0, 1.0)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.shader.use()
-        #self.vc.draw(cull_face=False)
+        # self.vc.draw(cull_face=False)
         self.vq.draw(cull_face=False)
         glUseProgram(0)
 
@@ -73,8 +73,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(MyQWidget(self))
 
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
     app.exec()
+
+
+if __name__ == "__main__":
+    main()

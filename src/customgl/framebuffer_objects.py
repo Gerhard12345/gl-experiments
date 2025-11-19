@@ -211,9 +211,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(MyQWidget(self))
 
 
-if __name__ == "__main__":
+def main():
     app = QApplication(sys.argv)
-
     window = MainWindow()
     window.show()
     app.exec()
+
+
+if __name__ == "__main__":
+    main()
