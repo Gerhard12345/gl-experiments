@@ -47,7 +47,9 @@ jobs:
 
     - name: Test with pytest
       run: |
+        source .venv/bin/activate
         python -m pytest
     - name: build
       run: |
+        source .venv/bin/activate
         python -m build
