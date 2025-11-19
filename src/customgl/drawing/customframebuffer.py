@@ -152,13 +152,11 @@ class CustomFrameBuffer:
         return return_value
 
     def bind_shadow_texture(self):
-        GL.glActiveTexture(GL.GL_TEXTURE0)
         if self.hasMultiDepthBuffer:
             GL.glBindTexture(GL.GL_TEXTURE_2D_ARRAY, self.glrboid)
         elif self.hasDepthBuffer:
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.glrboid)
         elif self.hasCubeMapDepthBuffer:
-            GL.glActiveTexture(GL.GL_TEXTURE5)
             GL.glBindTexture(GL.GL_TEXTURE_CUBE_MAP_ARRAY, self.glrboid)
         else:
             raise NotImplementedError("binding shadow texture is not implemented fot buffers without depth component")

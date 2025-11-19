@@ -1,12 +1,12 @@
-from pathlib import Path
 import numpy as np
-
-from OpenGL.GL import *
 from pathlib import Path
-from .shader import Shader
+
+from OpenGL import GL
+
 from .customframebuffer import CustomFrameBuffer
 from .objectviews import SceneView
 from .objectviews import VertexBuffer
+from .shader import Shader
 from ..objects.transformations import getOrthogonalProjectionMatrix, getCentralProjectionMatrix
 from ..objects.material import Material
 from ..objects.objects3d import Quad
@@ -52,11 +52,13 @@ class CommonShaderData:
             ),
             "u_projection_mat_lightspace",
         )
-        shader.setInt(self.directional_shadows_texture_unit, "shadowtex")
+        shader.setInt(self.directional_shadows_texture_unit, "directional_shadow_map")
         shader.setInt(self.omnidirectional_shadows_texture_unit, "depthMap")
         shader.setFloat(self.omnidirectional_shadows_far, "far_plane")
-        directional_shadow_framebuffer.bind_shadow_texture()
+        GL.glActiveTexture(GL.GL_TEXTURE0 + self.omnidirectional_shadows_texture_unit)
         omnidirectional_shadows_framebuffer.bind_shadow_texture()
+        GL.glActiveTexture(GL.GL_TEXTURE0 + self.directional_shadows_texture_unit)
+        directional_shadow_framebuffer.bind_shadow_texture()
 
     def prepare_omnidirectional_shader_with_transformations(self, shader: Shader, omnidirectional_shadows_framebuffer: CustomFrameBuffer):
         shader.use()
@@ -122,16 +124,16 @@ class ShadowRenderer(Renderer):
     def render(self, scene_view: SceneView):
         scene = scene_view.scene
         self.shader.use()
-        glViewport(0, 0, self.width, self.height)
+        GL.glViewport(0, 0, self.width, self.height)
         self.shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width, self.height)))
         for i in range(scene.n_lights):
             self.shader.setViewmat(scene.lights[i].light_space_camera.getViewmat())
             self.framebuffer.bind(i)
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
-            glEnable(GL_CULL_FACE)
-            glCullFace(GL_BACK)
+            GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
+            GL.glEnable(GL.GL_CULL_FACE)
+            GL.glCullFace(GL.GL_BACK)
             scene_view.draw(self.shader, cull_face=True)
-            glDisable(GL_CULL_FACE)
+            GL.glDisable(GL.GL_CULL_FACE)
 
 
 class PointShadowRenderer(Renderer):
@@ -144,7 +146,7 @@ class PointShadowRenderer(Renderer):
         self.framebuffer = CustomFrameBuffer(n_lights=self.n_lights)
         self.framebuffer.addCubeMapDepthBuffer()
         shader = Shader()
-        shader.add_define("N_POINT_LIGHTS", 1)
+        shader.add_define("N_POINT_LIGHTS", self.n_lights)
         shader.compile_shader(
             vertex_code_file=self.shader_directory / "point_shadow.vert",
             fragment_code_file=self.shader_directory / "point_shadow.frag",
@@ -156,8 +158,8 @@ class PointShadowRenderer(Renderer):
         scene = scene_view.scene
         self.shader.use()
         self.framebuffer.bind()
-        glViewport(0, 0, self.width, self.height)
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        GL.glViewport(0, 0, self.width, self.height)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         for i in range(self.n_lights):
             self.shader.setMatrix4fv(
                 [light_space_camera.getViewmat() for light_space_camera in scene.point_lights[i].light_space_camera], uniform_name="u_view_mat"
@@ -165,10 +167,10 @@ class PointShadowRenderer(Renderer):
             self.shader.setVec3fv([scene.point_lights[i].position], uniform_name="lightPos")
             self.shader.setInt(i, "light_index")
             self.framebuffer.bind()
-            glEnable(GL_CULL_FACE)
-            glCullFace(GL_BACK)
+            GL.glEnable(GL.GL_CULL_FACE)
+            GL.glCullFace(GL.GL_BACK)
             scene_view.draw(self.shader, cull_face=True)
-            glDisable(GL_CULL_FACE)
+            GL.glDisable(GL.GL_CULL_FACE)
 
     def set_size(self, width: int, height: int):
         larger_dim = np.max([width, height])
@@ -188,7 +190,7 @@ class RGBRenderer(Renderer):
         self.framebuffer.addColorBuffer()
         self.framebuffer.addDepthBuffer()
         shader = Shader()
-        shader.add_define("N_DIRECTIONAL_LIGHTS", 1)
+        shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_lights)
         shader.add_define("N_POINT_LIGHTS", self.n_lights)
         shader.compile_shader(self.shader_directory / "main.vert", self.shader_directory / "main.frag")
         self.shader = shader
@@ -196,7 +198,7 @@ class RGBRenderer(Renderer):
     def render(self, scene_view: SceneView):
         scene = scene_view.scene
         self.shader.use()
-        glViewport(0, 0, self.width, self.height)
+        GL.glViewport(0, 0, self.width, self.height)
         self.shader.setLightPositions([light.light_space_camera.getViewingPosition() for light in scene.lights])
         self.shader.setMatrix4fv([light.light_space_camera.getViewmat() for light in scene.lights], "u_view_mat_lightspace")
 
@@ -215,7 +217,7 @@ class RGBRenderer(Renderer):
             self.shader.setFloat(light.quadratic, f"u_point_lights[{i}].qudratic")
 
         self.framebuffer.bind(0)
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
 
         scene_view.draw(self.shader, cull_face=True)
         self.framebuffer.unbind()
@@ -239,17 +241,17 @@ class QuadRenderer:
         self.buffer.upload_data_to_gpu(vertices=q.get_vertices(), indices=q.get_indices())
 
     def render(self, shadow_texture: int, rgb_texture: int):
-        glViewport(0, 0, self.width, self.height)
+        GL.glViewport(0, 0, self.width, self.height)
         self.shader.use()
         self.shader.setInt(0, "shadow_texture")
         self.shader.setInt(1, "scene_texture")
         self.shader.setInt(self.drawing_index, "shadow_component")
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D_ARRAY, shadow_texture)
-        glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D, rgb_texture)
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D_ARRAY, shadow_texture)
+        GL.glActiveTexture(GL.GL_TEXTURE1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, rgb_texture)
         with self.buffer:
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, None)
 
     def set_drawing_index(self, index: int):
         self.drawing_index = index

@@ -37,7 +37,7 @@ class GLWidget(QOpenGLWidget):
         self.shadow_renderer: Renderer = ShadowRenderer(n_lights=4)
         print("set up point shadow renderer")
         self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=4)
-        print("set up point rgb renderer")
+        print("set up rgb renderer")
         self.rgb_renderer: Renderer = RGBRenderer(n_lights=4)
         print("set up quad renderer")
         self.quad_on_screen_renderer = QuadRenderer()
@@ -47,7 +47,7 @@ class GLWidget(QOpenGLWidget):
         self.manual_camera = True
         self.do_update = False
         print("set up common shader data")
-        self.common_shader_data = CommonShaderData()
+        self.common_shader_data: CommonShaderData = CommonShaderData()
 
     def initializeGL(self):
         print("initialize shadow renderer")

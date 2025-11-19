@@ -1,5 +1,7 @@
+from dataclasses import dataclass
+from typing import List
+
 import numpy as np
-from pathlib import Path
 
 from ..objects.objects3d import Cube
 from ..objects.objects3d import Quad
@@ -20,15 +22,12 @@ from ..objects.material import (
     WornMetal,
 )
 from ..objects.transformations import Transformations
-
+from ..objects.rolling_sphere import RollingSphere, RollingSphereParametric
 from ..objects.surface import (
     MeshedSurfaceWithNormalOffset,
     MeshedSurfaceWall,
     AnalyticalDomain,
 )
-from ..objects.rolling_sphere import RollingSphere, RollingSphereParametric
-from typing import List
-from dataclasses import dataclass
 
 
 @dataclass
@@ -51,9 +50,6 @@ class DirectionalLight:
     ambient: List[float] = None
     diffuse: List[float] = None
     specular: List[float] = None
-    constant: float = None
-    linear: float = None
-    quadratic: float = None
 
     def __post_init__(self):
         self.light_space_camera.lookAt()
@@ -250,20 +246,18 @@ class Scene3(Scene):
     roty = 35.26
 
     def __init__(self):
-        super(Scene3, self).__init__()
-        surface_f = lambda q: (np.sin(q[0]) * (3 - 0.3 * q[0])) + 0.15 * q[1] ** 2
-        surface_df = lambda q: [-0.3 * np.sin(q[0]) + (3 - 0.3 * q[0]) * np.cos(q[0]), 2 * 0.15 * q[1]]
+        super().__init__()
+
+        def surface_f(q):
+            return (np.sin(q[0]) * (3 - 0.3 * q[0])) + 0.15 * q[1] ** 2
+
+        def surface_df(q):
+            return [-0.3 * np.sin(q[0]) + (3 - 0.3 * q[0]) * np.cos(q[0]), 2 * 0.15 * q[1]]
+
         bounds = [[1, 23], [-3, 3]]
         x0 = np.pi / 2
         y0 = 0.25
         b = AnalyticalDomain(lambda u, v: u, lambda u, v: v, lambda u, v: np.matrix([[1, 0], [0, 1]]), bounds[0], bounds[1])
-        # b = AnalyticalDomain(
-        #     lambda u, v: u * np.cos(v),
-        #     lambda u, v: u * np.sin(v),
-        #     lambda u, v: np.matrix([[np.cos(v), np.sin(v)], [-u * np.sin(v), u * np.cos(v)]]),
-        #     [1, 3],
-        #     [0, 2 * np.pi],
-        # )
         z = surface_f([x0, y0])
         r = 0.5
         s3 = MeshedSurfaceWithNormalOffset(
@@ -372,8 +366,13 @@ class Scene4(Scene):
 
     def __init__(self):
         super(Scene4, self).__init__()
-        surface_f = lambda rphi: 0.125 * (rphi[0] - 8) ** 2 - 0.5 * np.sin(2 * rphi[1])
-        surface_df = lambda rphi: [2 * 0.125 * (rphi[0] - 8), -2 * 0.5 * np.cos(2 * rphi[1])]
+
+        def surface_f(rphi):
+            return 0.125 * (rphi[0] - 8) ** 2 - 0.5 * np.sin(2 * rphi[1])
+
+        def surface_df(rphi):
+            return [2 * 0.125 * (rphi[0] - 8), -2 * 0.5 * np.cos(2 * rphi[1])]
+
         bounds = [[6, 10], [0, 2 * np.pi]]
         x0 = 9
         y0 = 2 * np.pi - 0.4
@@ -426,22 +425,16 @@ class Scene4(Scene):
         self.objects.extend(object_views)
 
     def set_lights(self):
-        unidirectional_lights_position = [[-11, 6, -11], [-11, 6, 11], [11, 6, 11], [11, 6, -11]]
-        lights_ambient = [[0.5, 0.5, 0.5]] * 4
-        lights_diffuse = [[0.8, 0.8, 0.8]] * 4
+        unidirectional_lights_position = [[-11, 16, -11], [-11, 16, 11], [11, 16, 11], [11, 16, -11]]
+        lights_ambient = [[0.25, 0.25, 0.25]] * 4
+        lights_diffuse = [[0.5, 0.5, 0.5]] * 4
         lights_specular = [[1, 1, 1]] * 4
         lights_constant = [1] * 4
         lights_linear = [0.09] * 4
         lights_quadratic = [0.032] * 4
         self.lights = [
             DirectionalLight(
-                light_space_camera=Camera(eye=light_position),
-                ambient=light_ambient,
-                diffuse=light_diffuse,
-                specular=light_specular,
-                constant=light_constant,
-                linear=light_linear,
-                quadratic=light_quadratic,
+                light_space_camera=Camera(eye=light_position), ambient=light_ambient, diffuse=light_diffuse, specular=light_specular
             )
             for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
                 unidirectional_lights_position,
