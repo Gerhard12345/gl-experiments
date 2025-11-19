@@ -61,3 +61,14 @@ max-line-length = 145
 disable = [
   "R0903"
 ]
+[tool.pylint.basic]
+
+# Allow specific variable names
+good-names = ["initializeGL",
+              "paintGL",
+              "resizeGL",
+              "mouseDoubleClickEvent",
+              "wheelEvent",
+              "mouseReleaseEvent",
+              "mouseMoveEvent"
+]

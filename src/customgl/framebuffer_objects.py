@@ -1,67 +1,25 @@
+import sys
+
 import numpy as np
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from PyQt6.QtOpenGL import *
+import OpenGL.GL as GL
+
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat
 from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout
-import sys
+
 
 from .drawing.customframebuffer import CustomFrameBuffer
-from .objects.transformations import getOrthogonalProjectionMatrix, getCentralProjectionMatrix
-from .drawing.shader import Shader
-from .scenes.scene import Scene, Scene1, Scene3
-from .objects.objects3d import Quad
-from .objects.camera import Camera, Camera1
-from .objects.material import Material
 from .drawing.objectviews import VertexBuffer
 from .drawing.objectviews import SceneView
+from .drawing.shader import Shader
+from .objects.camera import Camera, Camera1
+from .objects.material import Material
+from .objects.objects3d import Quad
+from .objects.transformations import getOrthogonalProjectionMatrix, getCentralProjectionMatrix
+
+from .scenes.scene import Scene1
 
 SCALE = 1.5
-
-
-class Renderer:
-    def __init__(self, n_lights: int):
-        self.n_lights = n_lights
-
-    def initialize(self):
-        pass
-
-    def set_size(self, width: int, height: int):
-        pass
-
-    def render(self):
-        pass
-
-
-class ShadowRenderer(Renderer):
-    def __init__(self, n_lights: int):
-        super().__init__(self, n_lights)
-
-    def initialize(self):
-        self.lightspace_depth_framebuffer = CustomFrameBuffer(n_lights=4)
-        self.lightspace_depth_framebuffer.addMultiDepthBuffer()
-        shader = Shader()
-        shader.add_define("N_LIGHTS", n_lights)
-        shader.compile_shader(
-            "./customgl/drawing/shaders/shadow.vert",
-            "./customgl/drawing/shaders/shadow.frag",
-        )
-        self.lightspace_depth_shader = shader
-
-    def render(self, scene: Scene, scene_view: SceneView):
-        self.lightspace_depth_shader.use()
-        self.lightspace_depth_shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width, self.height)))
-        for i in range(scene.n_lights):
-            self.lightspace_depth_shader.setViewmat(scene.lights[i].getViewmat())
-            self.lightspace_depth_framebuffer.bind(i)
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
-            scene_view.draw(self.lightspace_depth_shader)
-
-    def set_size(self, width: int, height: int):
-        self.width = width
-        self.height = height
-        self.lightspace_depth_framebuffer.resize((width, height))
 
 
 # implementing a custom openGl widget
@@ -75,8 +33,6 @@ class GLWidget(QOpenGLWidget):
         self.framebuffer: CustomFrameBuffer = None
         self.lightspace_depth_framebuffer: CustomFrameBuffer = None
         self.drawing_index = -1
-        self.scene = Scene3()
-        self.camera: Camera = Camera(eye=[-10, 13, 20], at=[0, 6, 12], up=[0, 1, 0])
         self.scene = Scene1()
         self.camera: Camera = Camera1(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
         self.shader: Shader = None
@@ -100,12 +56,12 @@ class GLWidget(QOpenGLWidget):
         self.quad_on_screen_shader.setInt(0, "scene_texture")
         self.quad_on_screen_shader.setInt(1, "shadow_texture")
         self.quad_on_screen_shader.setInt(self.drawing_index, "shadow_component")
-        glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.framebuffer.gltexid)
-        glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D_ARRAY, self.lightspace_depth_framebuffer.glrboid)
+        GL.glActiveTexture(GL.GL_TEXTURE0)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.framebuffer.gltexid)
+        GL.glActiveTexture(GL.GL_TEXTURE1)
+        GL.glBindTexture(GL.GL_TEXTURE_2D_ARRAY, self.lightspace_depth_framebuffer.glrboid)
         with self.buffer:
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, None)
+            GL.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, None)
 
     def initialize_rgb_stuff(self):
         self.framebuffer = CustomFrameBuffer(n_lights=4)
@@ -137,7 +93,7 @@ class GLWidget(QOpenGLWidget):
         for i in range(self.scene.n_lights):
             self.lightspace_depth_shader.setViewmat(self.scene.lights[i].light_space_camera.getViewmat())
             self.lightspace_depth_framebuffer.bind(i)
-            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+            GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
             self.scene_view.draw(self.lightspace_depth_shader)
 
     def draw_rgb_stuff(self):
@@ -147,7 +103,7 @@ class GLWidget(QOpenGLWidget):
         self.shader.setCameraPosition(self.camera.getViewingPosition())
         self.shader.setProjectionmat(getCentralProjectionMatrix((self.width(), self.height()), znear=0.1, zfar=100, fov=self.camera.fov))
         self.framebuffer.bind(0)
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         self.scene_view.draw(self.shader)
         self.framebuffer.unbind()
 
@@ -157,20 +113,20 @@ class GLWidget(QOpenGLWidget):
         self.initialize_fullscreen_quad()
 
     def paintGL(self):
-        glEnable(GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_DEPTH_TEST)
         self.draw_rgb_stuff()
         self.draw_lightspace_depth_stuff()
-        glDisable(GL_DEPTH_TEST)
+        GL.glDisable(GL.GL_DEPTH_TEST)
 
-        glBindFramebuffer(GL_FRAMEBUFFER, self.defaultFramebufferObject())
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.defaultFramebufferObject())
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         self.draw_texture_to_fullscreen_quad()
 
     def resizeGL(self, width, height):
         print(width, height)
         w = int(width * SCALE)
         h = int(height * SCALE)
-        glViewport(0, 0, w, h)
+        GL.glViewport(0, 0, w, h)
         self.framebuffer.resize((w, h))
         self.lightspace_depth_framebuffer.resize((w, h))
 

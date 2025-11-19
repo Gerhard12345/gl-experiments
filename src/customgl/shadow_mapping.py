@@ -1,15 +1,14 @@
+import sys
+
 import numpy as np
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from PyQt6.QtOpenGL import *
+import OpenGL.GL as GL
+
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat, QMouseEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtCore import QTimer
 from PyQt6.QtCore import Qt
-import sys
-from .scenes.scene import Scene, Scene1, Scene3, Scene4
-from .objects.camera import Camera, Camera1
+
 from .drawing.objectviews import SceneView
 from .drawing.openglrenderer import (
     ShadowRenderer,
@@ -20,6 +19,8 @@ from .drawing.openglrenderer import (
     OpenGLCamera,
     CommonShaderData,
 )
+from .objects.camera import Camera, Camera1
+from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
 SCALE = 1.5
 
@@ -28,7 +29,6 @@ SCALE = 1.5
 class GLWidget(QOpenGLWidget):
 
     def __init__(self, parent):
-        self.parent = parent
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(100, 400)
         self.scene: Scene = None
@@ -44,7 +44,7 @@ class GLWidget(QOpenGLWidget):
         self.opengl_camera: OpenGLCamera = None
         self.scene_view: SceneView = None
         self.last_position = None
-        self.manual_camera = False
+        self.manual_camera = True
         self.do_update = False
         print("set up common shader data")
         self.common_shader_data = CommonShaderData()
@@ -59,12 +59,12 @@ class GLWidget(QOpenGLWidget):
         print("initialize quad renderer")
         self.quad_on_screen_renderer.initialize()
         print("create buffers")
-        self.createVertexBuffer()
+        self.create_vertex_buffer()
         print("done")
 
     def paintGL(self):
-        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS)
-        glEnable(GL_DEPTH_TEST)
+        GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
+        GL.glEnable(GL.GL_DEPTH_TEST)
         self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
             shader=self.point_shadow_renderer.shader, omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer
         )
@@ -84,10 +84,10 @@ class GLWidget(QOpenGLWidget):
             omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer,
         )
         self.rgb_renderer.render(scene_view=self.scene_view)
-        glDisable(GL_DEPTH_TEST)
-        glDisable(GL_CULL_FACE)
-        glBindFramebuffer(GL_FRAMEBUFFER, self.defaultFramebufferObject())
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
+        GL.glDisable(GL.GL_DEPTH_TEST)
+        GL.glDisable(GL.GL_CULL_FACE)
+        GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.defaultFramebufferObject())
+        GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         self.quad_on_screen_renderer.render(
             shadow_texture=self.shadow_renderer.framebuffer.glrboid, rgb_texture=self.rgb_renderer.framebuffer.gltexid
         )
@@ -100,7 +100,7 @@ class GLWidget(QOpenGLWidget):
         self.point_shadow_renderer.set_size(width=w, height=h)
         self.quad_on_screen_renderer.set_size(width=w, height=h)
 
-    def createVertexBuffer(self):
+    def create_vertex_buffer(self):
         print("create objects")
         self.scene = Scene4()
         # self.scene = Scene1()
@@ -122,7 +122,7 @@ class GLWidget(QOpenGLWidget):
         render_width, render_height = self.rgb_renderer.framebuffer.width, self.rgb_renderer.framebuffer.height
         window_x = int(window_x * SCALE)
         window_y = render_height - int(window_y * SCALE)
-        window_z = glReadPixels(window_x, window_y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+        window_z = GL.glReadPixels(window_x, window_y, 1, 1, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT)
         window_x = window_x / render_width * 2 - 1
         window_y = window_y / render_height * 2 - 1
         window_z = window_z[0, 0] * 2 - 1
@@ -185,13 +185,13 @@ class MyQWidget(QWidget):
         layout = QVBoxLayout()
         layout.addWidget(combobox)
         button_layout = QHBoxLayout()
-        button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "camera update"]
-        button_state = [True, True, True, True, False, True]
+        button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "manual camera"]
+        button_states = [True, True, True, True, False, True]
         button_parameters = [0, 1, 2, 3, -1, -2]
-        for button_text, button_parameter in zip(button_texts, button_parameters):
+        for button_text, button_parameter, button_state in zip(button_texts, button_parameters, button_states):
             button = QPushButton(button_text)
             button.setCheckable(True)
-            button.setChecked(True)
+            button.setChecked(button_state)
             button.pressed.connect(lambda val=button_parameter: self.toggle(val))
             button_layout.addWidget(button)
         layout.addLayout(button_layout)

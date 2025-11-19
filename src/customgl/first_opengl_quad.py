@@ -1,16 +1,16 @@
 import sys
 import numpy as np
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtOpenGL import *
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout
-from PyQt6.QtGui import QSurfaceFormat
+import OpenGL.GL as GL
 
-from .objects.objects3d import Quad, Cube
-from .objects.material import Material
+from PyQt6.QtGui import QSurfaceFormat
+from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout
+
+
 from .drawing.objectviews import View
 from .drawing.shader import Shader
+from .objects.material import Material
+from .objects.objects3d import Quad, Cube
 
 
 # implementing a custom openGl widget
@@ -40,15 +40,15 @@ class GLWidget(QOpenGLWidget):
         )
 
     def resizeGL(self, w: int, h: int) -> None:
-        glViewport(0, 0, w, h)
+        GL.glViewport(0, 0, w, h)
 
     def paintGL(self):
-        glClearColor(0.0, 1.0, 1.0, 1.0)
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        GL.glClearColor(0.0, 1.0, 1.0, 1.0)
+        GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
         self.shader.use()
         # self.vc.draw(cull_face=False)
         self.vq.draw(cull_face=False)
-        glUseProgram(0)
+        GL.glUseProgram(0)
 
 
 class MyQWidget(QWidget):
