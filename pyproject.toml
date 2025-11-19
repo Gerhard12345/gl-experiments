@@ -23,6 +23,19 @@ dependencies = [
   "matplotlib"
 ]
 
+[dependency-groups]
+build = [
+    "build"
+]
+test = [
+    "pytest == 8.2.0"
+]
+lint = [
+    "black",
+    "pylint"
+]
+
+
 [project.urls]
 Homepage = "https://github.com/pypa/sampleproject"
 Issues = "https://github.com/pypa/sampleproject/issues"
@@ -44,5 +57,5 @@ max-line-length = 145
 
 [tool.pylint.messages_control]
 disable = [
-  "R0903",
+  "R0903"
 ]
