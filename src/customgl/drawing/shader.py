@@ -1,11 +1,10 @@
-from pathlib import Path
-from OpenGL import GL
-from numpy.typing import NDArray
+from typing import Dict
 from typing import List
-
+from pathlib import Path
 
 import numpy as np
-from typing import Dict
+from numpy.typing import NDArray
+from OpenGL import GL
 
 
 class Shader:

@@ -1,8 +1,10 @@
+from typing import List
+
 import numpy as np
 from numpy.typing import NDArray
+
 from .material import Material
 from .transformations import Transformations
-from typing import List
 
 
 class Object3d:
