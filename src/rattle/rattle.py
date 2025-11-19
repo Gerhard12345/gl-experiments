@@ -62,7 +62,7 @@ from typing import Callable
 from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from customgl.objects.surface import AnalyticalDomain
 
 
@@ -332,10 +332,7 @@ class Rattle:
 
 
 if __name__ == "__main__":
-    from customgl.objects.surface import AnalyticalDomain
     from customgl.objects.surface import MeshedSurface
-    from customgl.objects.surface import Surface
-    from customgl.objects.surface import unit_square
 
     surface_f = lambda q: (q[0] ** 2 + q[1] ** 2) ** 2
     surface_df = lambda q: [
