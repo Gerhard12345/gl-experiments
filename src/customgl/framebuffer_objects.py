@@ -44,8 +44,8 @@ class ShadowRenderer(Renderer):
         shader = Shader()
         shader.add_define("N_LIGHTS", n_lights)
         shader.compile_shader(
-            "./customgl11/drawing/shaders/shadow.vert",
-            "./customgl11/drawing/shaders/shadow.frag",
+            "./customgl/drawing/shaders/shadow.vert",
+            "./customgl/drawing/shaders/shadow.frag",
         )
         self.lightspace_depth_shader = shader
 

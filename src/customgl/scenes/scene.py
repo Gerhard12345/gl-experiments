@@ -232,12 +232,12 @@ class Scene1(Scene):
             x=7.5,
             y=7.5,
             z=40,
-            bottom_material=MuddyConcrete(texturescales=[2, 2 * 40 / 7.5]),
-            top_material=WoodenCeiling(texturescales=[2, 2 * 40 / 7.5]),
-            left_material=BrickWall2(texturescales=[2 * 40 / 7.5, 2]),
-            right_material=BrickWall2(texturescales=[2 * 40 / 7.5, 2]),
-            front_material=BrickWall2(texturescales=[2, 2]),
-            back_material=BrickWall2(texturescales=[2, 2]),
+            bottom_material=MuddyConcrete(texture_scales=[2, 2 * 40 / 7.5]),
+            top_material=WoodenCeiling(texture_scales=[2, 2 * 40 / 7.5]),
+            left_material=BrickWall2(texture_scales=[2 * 40 / 7.5, 2]),
+            right_material=BrickWall2(texture_scales=[2 * 40 / 7.5, 2]),
+            front_material=BrickWall2(texture_scales=[2, 2]),
+            back_material=BrickWall2(texture_scales=[2, 2]),
             position=[0, 0, 0],
         )
         object_views = build_room(room_definition)
@@ -273,8 +273,8 @@ class Scene3(Scene):
             h_u=0.0125,
             h_v=0.025,
             position=np.array([0, 0, 0]),
-            material=WoodenCeiling(texturescales=[22 / 6, 1]),
-            # material=WoodenCeiling(texturescales=[22 / 6, 1]),
+            material=WoodenCeiling(texture_scales=[22 / 6, 1]),
+            # material=WoodenCeiling(texture_scales=[22 / 6, 1]),
             r=r,
         )
 
@@ -283,7 +283,7 @@ class Scene3(Scene):
             surface_f=surface_f,
             surface_df=surface_df,
             position=np.array([x0, y0, z]),
-            material=WoodenCeiling(texturescales=[2, 2]),
+            material=WoodenCeiling(texture_scales=[2, 2]),
             r=r,
         )
         self.objects.append(r)
@@ -291,12 +291,12 @@ class Scene3(Scene):
             x=6,
             y=7.5,
             z=11,
-            bottom_material=MuddyConcrete(texturescales=[2, 2 * 10 / 6]),
-            top_material=WoodenCeiling(texturescales=[2, 2 * 10 / 6]),
-            left_material=WornMetal(texturescales=[2 * 10 / 6, 2]),
-            right_material=WornMetal(texturescales=[2 * 10 / 6, 2]),
-            front_material=WornMetal(texturescales=[2, 2]),
-            back_material=WornMetal(texturescales=[2, 2]),
+            bottom_material=MuddyConcrete(texture_scales=[2, 2 * 10 / 6]),
+            top_material=WoodenCeiling(texture_scales=[2, 2 * 10 / 6]),
+            left_material=WornMetal(texture_scales=[2 * 10 / 6, 2]),
+            right_material=WornMetal(texture_scales=[2 * 10 / 6, 2]),
+            front_material=WornMetal(texture_scales=[2, 2]),
+            back_material=WornMetal(texture_scales=[2, 2]),
             position=[0, 3.5, 12],
         )
         object_views = build_room(room_definition)
@@ -392,11 +392,11 @@ class Scene4(Scene):
             h_u=0.0125,
             h_v=0.0125,
             position=np.array([0, 0, 0]),
-            material=TerraCottaTiles(texturescales=[0.1, 0.1]),
+            material=TerraCottaTiles(texture_scales=[0.1, 0.1]),
             r=r,
         )
         self.objects.append(s3)
-        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texturescales=[2, 0.2]), bottom_height=-3)
+        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[2, 0.2]), bottom_height=-3)
         self.objects.append(s4)
         sphere_3d_position = [b.fx(x0, y0), b.fy(x0, y0), z]
 
@@ -406,7 +406,7 @@ class Scene4(Scene):
             surface_df=surface_df,
             position=np.array(sphere_3d_position),
             initial_parameter=[x0, y0],
-            material=WoodenCeiling(texturescales=[1, 1]),
+            material=WoodenCeiling(texture_scales=[1, 1]),
             r=r,
         )
         self.objects.append(r)
@@ -414,12 +414,12 @@ class Scene4(Scene):
             x=12,
             y=5.5,
             z=12,
-            bottom_material=MuddyConcrete(texturescales=[2, 2 * 12 / 5.5]),
-            top_material=WoodenCeiling(texturescales=[2, 2 * 12 / 5.5]),
-            left_material=WornMetal(texturescales=[2 * 12 / 5.5, 2]),
-            right_material=WornMetal(texturescales=[2 * 12 / 5.5, 2]),
-            front_material=WornMetal(texturescales=[2, 2]),
-            back_material=WornMetal(texturescales=[2, 2]),
+            bottom_material=MuddyConcrete(texture_scales=[2, 2 * 12 / 5.5]),
+            top_material=WoodenCeiling(texture_scales=[2, 2 * 12 / 5.5]),
+            left_material=WornMetal(texture_scales=[2 * 12 / 5.5, 2]),
+            right_material=WornMetal(texture_scales=[2 * 12 / 5.5, 2]),
+            front_material=WornMetal(texture_scales=[2, 2]),
+            back_material=WornMetal(texture_scales=[2, 2]),
             position=[0, 2.5, 0],
         )
         object_views = build_room(room_definition)

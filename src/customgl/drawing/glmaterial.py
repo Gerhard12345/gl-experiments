@@ -34,7 +34,7 @@ class Texture:
             im = default_value.astype(np.uint8)
         else:
             im = imread(filename)
-            # im = np.flip(im, axis=0)
+            im = np.flip(im, axis=0)
         mode = GL.GL_RGBA
         if im.ndim == 2:
             mode = GL.GL_RED
