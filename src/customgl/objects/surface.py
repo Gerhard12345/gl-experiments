@@ -285,10 +285,3 @@ class MeshedSurfaceWall(Object3d):
             ]
         )
         return b / np.linalg.norm(b)
-
-    @property
-    def z_values(self):
-        """
-        Return the z values at the mesh nodes
-        """
-        return (self.f_z(u, v) for u, v in self.parameter_grid)

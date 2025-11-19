@@ -11,7 +11,7 @@ class Object3d:
         self.scalev = scale
         self.material = material
         self._vertices = None
-        self._indices = None
+        self._indices: NDArray = None
         self.dynamics = np.matrix(np.identity(4))
         self.modelmat = np.matrix(np.identity(4))
 
@@ -20,6 +20,9 @@ class Object3d:
 
     def get_vertices(self) -> NDArray[np.float32]:
         return self._vertices
+
+    def get_n_vertices(self) -> NDArray[np.float32]:
+        return self._indices.size
 
     def get_indices(self) -> NDArray[np.float32]:
         return self._indices
@@ -118,8 +121,8 @@ class Cube(Object3d):
             ],
             dtype=np.float32,
         )
-        self._nvertices = 36
-        self._indices = np.array(range(0, self._nvertices), dtype=np.uint32)
+        _nvertices = 36
+        self._indices = np.array(range(0, _nvertices), dtype=np.uint32)
         self.scale(scale).translate(position)
 
 
@@ -141,8 +144,8 @@ class Quad(Object3d):
             ],
             dtype=np.float32,
         )
-        self._nvertices = 6
-        self._indices = np.array([range(0, self._nvertices)], dtype=np.uint32)
+        _nvertices = 6
+        self._indices = np.array([range(0, _nvertices)], dtype=np.uint32)
         self._indices = np.array([[0, 1, 2], [3, 4, 5]], dtype=np.uint32)
         self.scale(scale).translate(position)
 
@@ -205,14 +208,13 @@ class Ikosaeder(Object3d):
     def _get_tex_coord(self, node_index, trig, nodes):
         node = nodes[node_index]
         trig_x = (nodes[trig_node][0] for trig_node in trig)
-        trig_y = (nodes[trig_node][2] for trig_node in trig)
         coords = 0.5 * np.array([1 + np.arctan2(node[2], node[0]) / np.pi, np.acos(-node[1] / self.r) * 2 / np.pi])
         if all(x < 0 for x in trig_x):
             if coords[0] < 0.5:
                 coords[0] = 1 + coords[0]
         return coords
 
-    def _fill_vertices(self, nodes, trigs, upscale):
+    def _fill_vertices(self, nodes, trigs):
         self._vertices = list(self._vertices)
         for trig in trigs:
             for node in trig:
@@ -251,9 +253,10 @@ class Sphere(Ikosaeder):
         # r * ||node||^2 = n \dot neighbour_0 -> r = 1/||node||^2 * (node + 1/3 * (neighbour_0 - node))
         # ||node|| = 1 -> r = node \dot (node + 1/3 * (neighbour_0 - node))
         n = node / np.linalg.norm(node)
-        self.radial_scaling = np.dot(n, node + 1 / 3 * (self.nodes[neighbours[0]] - node)) / np.linalg.norm(node)
+        radial_scaling = np.dot(n, node + 1 / 3 * (self.nodes[neighbours[0]] - node)) / np.linalg.norm(node)
+        return radial_scaling
 
-    def _fill_local_nodes(self, trig, local_nodes):
+    def _fill_local_nodes(self, trig, local_nodes, radial_scaling):
         center = 1 / 3 * (self.nodes[trig[0]] + self.nodes[trig[1]] + self.nodes[trig[2]])
         local_nodes[0] = center
 
@@ -266,9 +269,9 @@ class Sphere(Ikosaeder):
         local_nodes[5] = self.nodes[trig[2]] + 1 / 3 * (self.nodes[trig[0]] - self.nodes[trig[2]])
         local_nodes[6] = self.nodes[trig[2]] + 2 / 3 * (self.nodes[trig[0]] - self.nodes[trig[2]])
 
-        local_nodes[7] = self.radial_scaling * self.nodes[trig[0]]
-        local_nodes[8] = self.radial_scaling * self.nodes[trig[1]]
-        local_nodes[9] = self.radial_scaling * self.nodes[trig[2]]
+        local_nodes[7] = radial_scaling * self.nodes[trig[0]]
+        local_nodes[8] = radial_scaling * self.nodes[trig[1]]
+        local_nodes[9] = radial_scaling * self.nodes[trig[2]]
 
     def _fill_local_trigs(self, local_trigs):
         n_trigs_per_trig = 9
@@ -282,14 +285,14 @@ class Sphere(Ikosaeder):
         local_trigs[n_trigs_per_trig - 0 - 1] = np.array([9, 5, 4])
 
     def _split_triangles_and_fill_vertices(self):
-        self._compute_radial_scaling_factor()
+        radial_scaling = self._compute_radial_scaling_factor()
         n_trigs_per_trig = 9
         n_nodes_per_trig = 10
         nodes = np.zeros([n_nodes_per_trig * len(self.trigs), 3])
         trigs = np.zeros([n_trigs_per_trig * len(self.trigs), 3], dtype=np.uint8)
         for i, trig in enumerate(self.trigs):
             local_nodes = nodes[i * n_nodes_per_trig : (i + 1) * n_nodes_per_trig, :]
-            self._fill_local_nodes(trig, local_nodes)
+            self._fill_local_nodes(trig, local_nodes, radial_scaling)
 
             local_trigs = trigs[i * n_trigs_per_trig : (i + 1) * n_trigs_per_trig, :]
             self._fill_local_trigs(local_trigs)
@@ -310,7 +313,7 @@ class Sphere(Ikosaeder):
         self._normalize_nodes(nodes)
         self._vertices = []
         self._nvertices = 0
-        self._fill_vertices(nodes, trigs, upscale=False)
+        self._fill_vertices(nodes, trigs)
 
     def _normalize_nodes(self, nodes):
         for node in nodes:
@@ -345,6 +348,6 @@ class SphericalCoordianteSphere(Object3d):
                 self._vertices.extend(nodes[0])
                 self._vertices.extend(nodes[2])
                 self._vertices.extend(nodes[3])
-        self._nvertices = len(self._vertices) // 14
+        _nvertices = len(self._vertices) // 14
         self._vertices = np.array(self._vertices, dtype=np.float32)
-        self._indices = np.array(range(0, self._nvertices), dtype=np.uint32)
+        self._indices = np.array(range(0, _nvertices), dtype=np.uint32)

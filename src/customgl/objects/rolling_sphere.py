@@ -3,7 +3,6 @@ from .material import Material
 import numpy as np
 from rattle.rattle_solver import RollingSphereOnSurface, RollingSphereOnParametricSurface
 from rattle.rattle import ParameterManager
-from time import perf_counter
 
 
 class RollingSphere(SphericalCoordianteSphere):
@@ -18,7 +17,7 @@ class RollingSphere(SphericalCoordianteSphere):
         super().__init__(position, material, r)
         self.rolling_sphere = RollingSphereOnSurface(surface_f, surface_df, position=position)
         self.translate(np.roll(position, -1))
-        self.E = self.rolling_sphere.energy
+        self.energy = self.rolling_sphere.energy
 
     def update(self):
         super().update()
@@ -29,7 +28,7 @@ class RollingSphere(SphericalCoordianteSphere):
             rotation_axis = np.roll(self.rolling_sphere.get_rotation_axis(), -1)
             self.rotate_axis(1 / self.r * np.linalg.norm(self.rolling_sphere.rattle.q - q_old), rotation_axis)
             self.translate(np.roll(self.rolling_sphere.rattle.q, -1))
-        self.E = self.rolling_sphere.energy
+        self.energy = self.rolling_sphere.energy
 
 
 class RollingSphereParametric(SphericalCoordianteSphere):
@@ -47,7 +46,7 @@ class RollingSphereParametric(SphericalCoordianteSphere):
         pm = ParameterManager(uv=initial_parameter)
         self.rolling_sphere = RollingSphereOnParametricSurface(analytical_domain, pm, surface_f, surface_df, position=position)
         self.translate(np.roll(position, -1))
-        self.E = self.rolling_sphere.energy
+        self.energy = self.rolling_sphere.energy
 
     def update(self):
         super().update()
@@ -58,4 +57,4 @@ class RollingSphereParametric(SphericalCoordianteSphere):
         rotation_axis = np.roll(self.rolling_sphere.get_rotation_axis(), -1)
         self.rotate_axis(1 / self.r * np.linalg.norm(self.rolling_sphere.rattle.q - q_old0), rotation_axis)
         self.translate(np.roll(self.rolling_sphere.rattle.q, -1))
-        self.E = self.rolling_sphere.energy
+        self.energy = self.rolling_sphere.energy
