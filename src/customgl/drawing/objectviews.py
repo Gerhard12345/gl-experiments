@@ -2,7 +2,7 @@ import ctypes
 
 import numpy as np
 from numpy.typing import NDArray
-import OpenGL.GL as GL
+from OpenGL import GL
 
 from .glmaterial import GLMaterial
 from .shader import Shader

@@ -1,7 +1,7 @@
 import sys
 
 import numpy as np
-import OpenGL.GL as GL
+from OpenGL import GL
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat, QMouseEvent

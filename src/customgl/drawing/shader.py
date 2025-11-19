@@ -1,5 +1,5 @@
 from pathlib import Path
-import OpenGL.GL as GL
+from OpenGL import GL
 from numpy.typing import NDArray
 from typing import List
 
