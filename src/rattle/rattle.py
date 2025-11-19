@@ -433,7 +433,7 @@ if __name__ == "__main__":
         position=np.array([0, 0, 0]),
         material=None,
     )
-    m.plot_surface(axes)
+    # m.plot_surface(axes)
     axes.scatter3D(
         x,
         y,
