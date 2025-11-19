@@ -159,7 +159,7 @@ class Ikosaeder(Object3d):
         self.trigs = trigs
         self._vertices = []
         self._nvertices = 0
-        self._fill_vertices(nodes, trigs, False)
+        self._fill_vertices(nodes, trigs)
 
     def _compute_ikosaeder_nodes_and_trigs(self):
         angle = 2 * np.pi / 5
