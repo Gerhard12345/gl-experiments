@@ -140,13 +140,7 @@ class Scene1(Scene):
         lights_quadratic = [0.032] * 4
         self.lights = [
             DirectionalLight(
-                light_space_camera=Camera(eye=light_position),
-                ambient=light_ambient,
-                diffuse=light_diffuse,
-                specular=light_specular,
-                constant=light_constant,
-                linear=light_linear,
-                quadratic=light_quadratic,
+                light_space_camera=Camera(eye=light_position), ambient=light_ambient, diffuse=light_diffuse, specular=light_specular
             )
             for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
                 unidirectional_lights_position,
