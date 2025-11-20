@@ -24,14 +24,17 @@ from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
 import ctypes
 from enum import IntEnum
+
+
 class WidthIdentifers(IntEnum):
     VIRTUAL_WIDTH = 8
     PHYSICAL_WIDTH = 118
-dc = ctypes.windll.user32.GetDC(0)
-virtual_width = ctypes.windll.gdi32.GetDeviceCaps(dc,WidthIdentifers.VIRTUAL_WIDTH)
-physical_width = ctypes.windll.gdi32.GetDeviceCaps(dc,WidthIdentifers.PHYSICAL_WIDTH)
-SCALE = physical_width/virtual_width
 
+
+dc = ctypes.windll.user32.GetDC(0)
+virtual_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.VIRTUAL_WIDTH)
+physical_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.PHYSICAL_WIDTH)
+SCALE = physical_width / virtual_width
 
 
 # implementing a custom openGl widget
