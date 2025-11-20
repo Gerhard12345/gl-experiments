@@ -51,7 +51,7 @@ class Texture:
         return local_texture
 
     def bind(self):
-        texture_units = [GL.GL_TEXTURE1, GL.GL_TEXTURE2, GL.GL_TEXTURE3, GL.GL_TEXTURE4]
+        texture_units = [GL.GL_TEXTURE2, GL.GL_TEXTURE3, GL.GL_TEXTURE4, GL.GL_TEXTURE5]
         tids = [self.gltexid, self.glnormalid, self.glambient_occlusion, self.glspecular]
         tids_plain = [self.gltexid_plain, self.glnormalid_plain, self.glambient_occlusion_plain, self.glspecular_plain]
         indicators = [self.show_diffuse_maps, self.show_normal_maps, self.show_ambient_occlusion_maps, self.show_specular_maps]
@@ -61,7 +61,7 @@ class Texture:
             GL.glBindTexture(GL.GL_TEXTURE_2D, texture_id)
 
     def unbind(self):
-        texture_units = [GL.GL_TEXTURE1, GL.GL_TEXTURE2, GL.GL_TEXTURE3, GL.GL_TEXTURE4]
+        texture_units = [GL.GL_TEXTURE2, GL.GL_TEXTURE3, GL.GL_TEXTURE4, GL.GL_TEXTURE5]
         for tu in texture_units:
             GL.glActiveTexture(tu)
             GL.glBindTexture(GL.GL_TEXTURE_2D, 0)
@@ -95,13 +95,13 @@ class GLMaterial:
         u_specularpower = GL.glGetUniformLocation(program, bytes("u_material.specular_power", "utf-8"))
         GL.glUniform1f(u_specularpower, self.specularpower)
         u_int = GL.glGetUniformLocation(program, bytes("u_material.diffuse", "utf-8"))
-        GL.glUniform1i(u_int, 1)
-        u_int = GL.glGetUniformLocation(program, bytes("u_material.normal", "utf-8"))
         GL.glUniform1i(u_int, 2)
-        u_int = GL.glGetUniformLocation(program, bytes("u_material.ambient_occlusion", "utf-8"))
+        u_int = GL.glGetUniformLocation(program, bytes("u_material.normal", "utf-8"))
         GL.glUniform1i(u_int, 3)
-        u_int = GL.glGetUniformLocation(program, bytes("u_material.specular", "utf-8"))
+        u_int = GL.glGetUniformLocation(program, bytes("u_material.ambient_occlusion", "utf-8"))
         GL.glUniform1i(u_int, 4)
+        u_int = GL.glGetUniformLocation(program, bytes("u_material.specular", "utf-8"))
+        GL.glUniform1i(u_int, 5)
         u_texturescale = GL.glGetUniformLocation(program, bytes("u_texturescale", "utf-8"))
         GL.glUniform2f(u_texturescale, *self.texturescales)
 

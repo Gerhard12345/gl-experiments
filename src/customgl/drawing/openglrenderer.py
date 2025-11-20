@@ -30,7 +30,7 @@ class CommonShaderData:
         self.omnidirectional_shadows_fov = np.pi * 0.5
         self.omnidirectional_shadows_near = 1
         self.omnidirectional_shadows_far = 50
-        self.omnidirectional_shadows_texture_unit = 5
+        self.omnidirectional_shadows_texture_unit = 1
 
         self.directional_shadows_bottom = -28
         self.directional_shadows_top = 28

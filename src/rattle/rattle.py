@@ -1,4 +1,4 @@
-"""
+r"""
 This module is used to investigate the rattle algorithm for a
 hamiltonian system with algebraic condition. For a separable
 hamiltonian, we use the rattle's definition of p_n+1/2, q_n+1
@@ -334,23 +334,36 @@ class Rattle:
 if __name__ == "__main__":
     from customgl.objects.surface import MeshedSurface
 
-    surface_f = lambda q: (q[0] ** 2 + q[1] ** 2) ** 2
+    def surface_f(q):
+        return (q[0] ** 2 + q[1] ** 2) ** 2
+
     surface_df = lambda q: [
         2 * (q[0] ** 2 + q[1] ** 2) * 2 * q[0],
         2 * (q[1] ** 2 + q[0] ** 2) * 2 * q[1],
     ]
 
-    surface_fx = lambda q: (np.sin(0.5 * q[0]) * (3 - 0.3 * q[0]))
-    surface_dfx = lambda q: -0.3 * np.sin(0.5 * q[0]) + 0.5 * (3 - 0.3 * q[0]) * np.cos(0.5 * q[0])
+    def surface_fx(q):
+        return np.sin(0.5 * q[0]) * (3 - 0.3 * q[0])
+
+    def surface_dfx(q):
+        return -0.3 * np.sin(0.5 * q[0]) + 0.5 * (3 - 0.3 * q[0]) * np.cos(0.5 * q[0])
+
     # surface_fy = lambda q: np.exp(-(q[1]/10)**2) + 0.5*np.exp(-((q[1]-25.5)/10)**2)+ 0.5*np.exp(-((q[1]+25.5)/10)**2)
     # surface_dfy = lambda q: -2*q[1]/10*np.exp(-(q[1]/10)**2) - 0.5*2*((q[1]-25.5)/10) * np.exp(-((q[1]-25.5)/10)**2)- 0.5*2*((q[1]+25.5)/10) * np.exp(-((q[1]+25.5)/10)**2)
-    surface_fy = lambda q: 1
-    surface_dfy = lambda q: 0
-    surface_f = lambda q: surface_fx(q) * surface_fy(q) + 0.001 * (q[0] ** 2 + q[1] ** 2)
-    surface_df = lambda q: [
-        surface_dfx(q) * surface_fy(q) + 2 * 0.001 * q[0],
-        surface_fx(q) * surface_dfy(q) + 0.001 * 2 * q[1],
-    ]
+    def surface_fy(q):
+        return 1
+
+    def surface_dfy(q):
+        return 0
+
+    def surface_f(q):
+        return surface_fx(q) * surface_fy(q) + 0.001 * (q[0] ** 2 + q[1] ** 2)
+
+    def surface_df(q):
+        return [
+            surface_dfx(q) * surface_fy(q) + 2 * 0.001 * q[0],
+            surface_fx(q) * surface_dfy(q) + 0.001 * 2 * q[1],
+        ]
 
     if True:
         # surface_fx=lambda q: 1+0.2*np.sin(0.5*q[0])
@@ -360,24 +373,37 @@ if __name__ == "__main__":
         mean_v2 = np.array([-2, -2])
         mean_v3 = np.array([-2, 2])
         mean_v4 = np.array([2, -2])
-        atan = lambda q: 3 + 3 * np.arctan(0.1 * np.dot(q, q) - 30)
-        atandq = lambda q: 3 / (1 + (0.1 * np.dot(q, q) - 30) ** 2) * (2 * np.array(q)) * 0.1
-        gaussian = lambda q, mean_v, w: 2 * np.exp(-np.dot((q - mean_v) / w, (q - mean_v) / w))
-        gaussiandq = lambda q, mean_v, w: -2 * (q - mean_v) / w * gaussian(q, mean_v, w)
-        surface_f = (
-            lambda q: gaussian(q, mean_v1, 0.5 * w)
-            + gaussian(q, mean_v2, 0.5 * w)
-            + gaussian(q, mean_v3, 0.5 * w)
-            + gaussian(q, mean_v4, 0.5 * w)
-            + 1 * atan(0.35 * np.array(q))
-        )
-        surface_df = (
-            lambda q: gaussiandq(q, mean_v1, 0.5 * w)
-            + gaussiandq(q, mean_v2, 0.5 * w)
-            + gaussiandq(q, mean_v3, 0.5 * w)
-            + gaussiandq(q, mean_v4, 0.5 * w)
-            + 0.35 * atandq(0.35 * np.array(q))
-        )
+
+        def atan(q):
+            return 3 + 3 * np.arctan(0.1 * np.dot(q, q) - 30)
+
+        def atandq(q):
+            return 3 / (1 + (0.1 * np.dot(q, q) - 30) ** 2) * (2 * np.array(q)) * 0.1
+
+        def gaussian(q, mean_v, w):
+            return 2 * np.exp(-np.dot((q - mean_v) / w, (q - mean_v) / w))
+
+        def gaussiandq(q, mean_v, w):
+            return -2 * (q - mean_v) / w * gaussian(q, mean_v, w)
+
+        def surface_f(q):
+            return (
+                gaussian(q, mean_v1, 0.5 * w)
+                + gaussian(q, mean_v2, 0.5 * w)
+                + gaussian(q, mean_v3, 0.5 * w)
+                + gaussian(q, mean_v4, 0.5 * w)
+                + 1 * atan(0.35 * np.array(q))
+            )
+
+        def surface_df(q):
+            return (
+                lambda q: gaussiandq(q, mean_v1, 0.5 * w)
+                + gaussiandq(q, mean_v2, 0.5 * w)
+                + gaussiandq(q, mean_v3, 0.5 * w)
+                + gaussiandq(q, mean_v4, 0.5 * w)
+                + 0.35 * atandq(0.35 * np.array(q))
+            )
+
         # surface_f=lambda q:surface_fx(q)*gaussian(q) + 0.0 * np.dot(q-mean_v,q-mean_v)
         # surface_df=lambda q:[surface_dfx(q)*gaussian(q),0] + surface_fx(q)*gaussiandq(q) + 0.0*(q-mean_v)
     #                     -2*surface_fx(q)*np.exp(-(q[1]-m[0])**2/w**2)* (q[1]-m[0])/w**2,

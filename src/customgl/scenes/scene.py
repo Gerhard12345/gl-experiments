@@ -356,7 +356,7 @@ class Scene4(Scene):
         super(Scene4, self).__init__()
 
         def surface_f(rphi):
-            return 0.125 * (rphi[0] - 8) ** 2 - 0.5 * np.sin(2 * rphi[1])
+            return 2 + 0.125 * (rphi[0] - 8) ** 2 - 0.5 * np.sin(2 * rphi[1])
 
         def surface_df(rphi):
             return [2 * 0.125 * (rphi[0] - 8), -2 * 0.5 * np.cos(2 * rphi[1])]
@@ -383,7 +383,7 @@ class Scene4(Scene):
             r=r,
         )
         self.objects.append(s3)
-        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[2, 0.2]), bottom_height=-3)
+        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[0.01, 0.2]), bottom_height=-3)
         self.objects.append(s4)
         sphere_3d_position = [b.fx(x0, y0), b.fy(x0, y0), z]
 
@@ -434,7 +434,7 @@ class Scene4(Scene):
                 lights_quadratic,
             )
         ]
-        point_lights_position = [np.array([-11, 1, -11]), np.array([-11, 1, 11]), np.array([11, 1, -11]), np.array([11, 1, 11])]
+        point_lights_position = [np.array([-11, -1, -11]), np.array([-11, -1, 11]), np.array([11, 1, -11]), np.array([11, 1, 11])]
         lights_ambient = [[0.75, 0.75, 0.75]] * 4
         lights_diffuse = [[1, 1, 1]] * 4
         lights_specular = [[1, 1, 1]] * 4

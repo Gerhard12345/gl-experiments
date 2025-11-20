@@ -123,7 +123,7 @@ void main()
         
         float shadow = is_in_point_shadow(fs_in.fragment_position, normal, i);
         float attenuation = 1.0 / (u_point_lights[i].constant + u_point_lights[i].linear * light_to_fragment_distance + u_point_lights[i].quadratic * (light_to_fragment_distance * light_to_fragment_distance));
-        fragmentcolor += 1.0 / (N_POINT_LIGHTS+N_DIRECTIONAL_LIGHTS) * vec4(attenuation * (ambient_intensity + (1.0-shadow) * (diffuse_intensity + specular_intensity)).xyz, 1.0) * color;
+        fragmentcolor += 1.0 / (N_POINT_LIGHTS) * vec4(attenuation * (ambient_intensity + (1.0-shadow) * (diffuse_intensity + specular_intensity)).xyz, 1.0) * color;
     }
     for (int i=0;i<N_DIRECTIONAL_LIGHTS;i++) {
         vec3 light_to_fragment_vec = -u_directional_lights[i].direction;

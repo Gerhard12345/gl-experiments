@@ -216,15 +216,18 @@ class MeshedSurfaceWall(Object3d):
         self.texture_coords_u = np.zeros([len(self.meshed_surface.u_values), 2])
         self.texture_coords_v = np.zeros([len(self.meshed_surface.u_values), 2])
         vertices = []
-        for v, v_next in zip(self.meshed_surface.v_values, self.meshed_surface.v_values[1:]):
-            u_values = [self.meshed_surface.analytical_domain.range_u[0], self.meshed_surface.analytical_domain.range_u[1]]
-            fullnodes = []
-            for side_index, u0 in enumerate(u_values):
-                for u_local in [0, 1]:
-                    for v_local in [v, v_next]:
+        u_values = [self.meshed_surface.analytical_domain.range_u[0], self.meshed_surface.analytical_domain.range_u[1]]
+        for side_index, u0 in enumerate(u_values):
+            sums = [0, 0]
+            for v, v_next in zip(self.meshed_surface.v_values, self.meshed_surface.v_values[1:]):
+                fullnodes = []
+                d = [self.meshed_surface.analytical_domain.Jf(u0, v)[1, 0], self.meshed_surface.analytical_domain.Jf(u0, v)[1, 1]]
+                sums[1] = sums[0] + np.linalg.norm(d)
+                for is_bottom in [0, 1]:
+                    for number, v_local in enumerate([v, v_next]):
                         x, y, z0 = self.meshed_surface.value(u0, v_local)
-                        z = z0 * u_local + (bottom_height) * (1 - u_local)
-                        texture_coord_u = v_local
+                        z = z0 * is_bottom + (bottom_height) * (1 - is_bottom)
+                        texture_coord_u = sums[number]
                         texture_coord_v = z
                         t = self.meshed_surface.bitangent(u0, v_local)
                         t[2] = 0
@@ -234,19 +237,13 @@ class MeshedSurfaceWall(Object3d):
                         fullnodes.append(
                             [*np.roll([x, y, z], -1), *np.roll(n, -1), texture_coord_u, texture_coord_v, *np.roll(t, -1), *np.roll(b, -1)]
                         )
-            vertices.extend(fullnodes[0])
-            vertices.extend(fullnodes[3])
-            vertices.extend(fullnodes[1])
-            vertices.extend(fullnodes[0])
-            vertices.extend(fullnodes[2])
-            vertices.extend(fullnodes[3])
-
-            vertices.extend(fullnodes[4])
-            vertices.extend(fullnodes[5])
-            vertices.extend(fullnodes[7])
-            vertices.extend(fullnodes[4])
-            vertices.extend(fullnodes[7])
-            vertices.extend(fullnodes[6])
+                sums[0] = sums[1]
+                vertices.extend(fullnodes[0])
+                vertices.extend(fullnodes[3 if side_index == 0 else 1])
+                vertices.extend(fullnodes[1 if side_index == 0 else 3])
+                vertices.extend(fullnodes[0])
+                vertices.extend(fullnodes[2 if side_index == 0 else 3])
+                vertices.extend(fullnodes[3 if side_index == 0 else 2])
         self._nvertices = len(vertices) // 14
         vertices = np.array(vertices).flatten()
         print(self._nvertices)
