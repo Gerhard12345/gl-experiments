@@ -79,8 +79,6 @@ class CustomFrameBuffer:
     def resize(self, value: Iterable[int]):
         self.width = value[0]
         self.height = value[1]
-        print(f"setting framebuffer size to w = {value[0]}, h = {value[1]}")
-        print(f"Framebuffer texture id = {self.glrboid}")
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.glfboid)
         if self.hasColorBuffer:
             GL.glBindTexture(GL.GL_TEXTURE_2D, self.gltexid)
