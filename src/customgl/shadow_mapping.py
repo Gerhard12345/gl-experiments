@@ -19,22 +19,11 @@ from .drawing.openglrenderer import (
     OpenGLCamera,
     CommonShaderData,
 )
+from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera, Camera1
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
-import ctypes
-from enum import IntEnum
 
-
-class WidthIdentifers(IntEnum):
-    VIRTUAL_WIDTH = 8
-    PHYSICAL_WIDTH = 118
-
-
-dc = ctypes.windll.user32.GetDC(0)
-virtual_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.VIRTUAL_WIDTH)
-physical_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.PHYSICAL_WIDTH)
-SCALE = physical_width / virtual_width
 
 
 # implementing a custom openGl widget
@@ -105,8 +94,8 @@ class GLWidget(QOpenGLWidget):
         )
 
     def resizeGL(self, width, height):
-        w = int(width * SCALE)
-        h = int(height * SCALE)
+        w = int(width * get_windows_scaling_factor())
+        h = int(height * get_windows_scaling_factor())
         self.shadow_renderer.set_size(width=w, height=h)
         self.rgb_renderer.set_size(width=w, height=h)
         self.point_shadow_renderer.set_size(width=w, height=h)
@@ -132,8 +121,8 @@ class GLWidget(QOpenGLWidget):
     def unproject(self, window_x: int, window_y: int):
         self.rgb_renderer.framebuffer.bind()
         render_width, render_height = self.rgb_renderer.framebuffer.width, self.rgb_renderer.framebuffer.height
-        window_x = int(window_x * SCALE)
-        window_y = render_height - int(window_y * SCALE)
+        window_x = int(window_x * get_windows_scaling_factor())
+        window_y = render_height - int(window_y * get_windows_scaling_factor())
         window_z = GL.glReadPixels(window_x, window_y, 1, 1, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT)
         window_x = window_x / render_width * 2 - 1
         window_y = window_y / render_height * 2 - 1

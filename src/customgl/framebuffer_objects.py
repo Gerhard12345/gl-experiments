@@ -12,6 +12,7 @@ from .drawing.customframebuffer import CustomFrameBuffer
 from .drawing.objectviews import VertexBuffer
 from .drawing.objectviews import SceneView
 from .drawing.shader import Shader
+from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera, Camera1
 from .objects.material import Material
 from .objects.objects3d import Quad
@@ -19,7 +20,7 @@ from .objects.transformations import getOrthogonalProjectionMatrix, getCentralPr
 
 from .scenes.scene import Scene1
 
-SCALE = 1.5
+
 
 
 # implementing a custom openGl widget
@@ -124,8 +125,8 @@ class GLWidget(QOpenGLWidget):
 
     def resizeGL(self, width, height):
         print(width, height)
-        w = int(width * SCALE)
-        h = int(height * SCALE)
+        w = int(width * get_windows_scaling_factor())
+        h = int(height * get_windows_scaling_factor())
         GL.glViewport(0, 0, w, h)
         self.framebuffer.resize((w, h))
         self.lightspace_depth_framebuffer.resize((w, h))
