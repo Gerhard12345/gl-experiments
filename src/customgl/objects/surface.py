@@ -222,7 +222,7 @@ class MeshedSurfaceWall(Object3d):
             for v, v_next in zip(self.meshed_surface.v_values, self.meshed_surface.v_values[1:]):
                 fullnodes = []
                 d = [self.meshed_surface.analytical_domain.Jf(u0, v)[1, 0], self.meshed_surface.analytical_domain.Jf(u0, v)[1, 1]]
-                sums[1] = sums[0] + np.linalg.norm(d)
+                sums[1] = sums[0] + np.linalg.norm(d)*(v_next-v)/(2*np.pi)
                 for is_bottom in [0, 1]:
                     for number, v_local in enumerate([v, v_next]):
                         x, y, z0 = self.meshed_surface.value(u0, v_local)

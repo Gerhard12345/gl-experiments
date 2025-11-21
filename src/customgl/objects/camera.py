@@ -10,8 +10,8 @@ class Camera:
         self.eye = np.array(eye, dtype=np.float64)
         self.up = np.array(up, dtype=np.float64)
         at = np.array(at)
-        self.d = np.linalg.norm(eye - at)
-        direction = 1 / self.d * (eye - at)
+        d = np.linalg.norm(eye - at)
+        direction = 1 / d * (eye - at)
         self.phi = np.arctan2(direction[2], direction[0])
         self.theta = np.arccos(direction[1])
         self.near = near
@@ -48,14 +48,16 @@ class Camera:
 
     def rotate_theta(self, dtheta):
         self.theta += np.deg2rad(dtheta)
-        self.eye = self.at + self.d * np.array(
+        d = np.linalg.norm(self.eye - self.at)
+        self.eye = self.at + d * np.array(
             [np.cos(self.phi) * np.sin(self.theta), np.cos(self.theta), np.sin(self.phi) * np.sin(self.theta)]
         )
         self.lookAt()
 
     def rotate_phi(self, dphi):
         self.phi += np.deg2rad(dphi)
-        self.eye = self.at + self.d * np.array(
+        d = np.linalg.norm(self.eye - self.at)
+        self.eye = self.at + d * np.array(
             [
                 np.cos(self.phi) * np.sin(self.theta),
                 np.cos(self.theta),
@@ -67,7 +69,7 @@ class Camera:
     def zoom(self, zoom_factor: float):
         direction = (self.at - self.eye) * zoom_factor
         self.eye = self.at - direction
-        self.d = np.linalg.norm(self.eye - self.at)
+        #self.d = np.linalg.norm(self.eye - self.at)
         self.lookAt()
 
     def translate(self, translation: List[float]):

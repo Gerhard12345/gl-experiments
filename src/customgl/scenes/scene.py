@@ -383,7 +383,7 @@ class Scene4(Scene):
             r=r,
         )
         self.objects.append(s3)
-        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[0.01, 0.2]), bottom_height=-3)
+        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[0.5, 0.2]), bottom_height=-3)
         self.objects.append(s4)
         sphere_3d_position = [b.fx(x0, y0), b.fy(x0, y0), z]
 
