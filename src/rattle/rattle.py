@@ -337,10 +337,8 @@ if __name__ == "__main__":
     def surface_f(q):
         return (q[0] ** 2 + q[1] ** 2) ** 2
 
-    surface_df = lambda q: [
-        2 * (q[0] ** 2 + q[1] ** 2) * 2 * q[0],
-        2 * (q[1] ** 2 + q[0] ** 2) * 2 * q[1],
-    ]
+    def surface_df(q):
+       return [2 * (q[0] ** 2 + q[1] ** 2) * 2 * q[0], 2 * (q[1] ** 2 + q[0] ** 2) * 2 * q[1]]
 
     def surface_fx(q):
         return np.sin(0.5 * q[0]) * (3 - 0.3 * q[0])
