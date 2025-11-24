@@ -49,9 +49,7 @@ class Camera:
     def rotate_theta(self, dtheta):
         self.theta += np.deg2rad(dtheta)
         d = np.linalg.norm(self.eye - self.at)
-        self.eye = self.at + d * np.array(
-            [np.cos(self.phi) * np.sin(self.theta), np.cos(self.theta), np.sin(self.phi) * np.sin(self.theta)]
-        )
+        self.eye = self.at + d * np.array([np.cos(self.phi) * np.sin(self.theta), np.cos(self.theta), np.sin(self.phi) * np.sin(self.theta)])
         self.lookAt()
 
     def rotate_phi(self, dphi):
@@ -69,7 +67,7 @@ class Camera:
     def zoom(self, zoom_factor: float):
         direction = (self.at - self.eye) * zoom_factor
         self.eye = self.at - direction
-        #self.d = np.linalg.norm(self.eye - self.at)
+        # self.d = np.linalg.norm(self.eye - self.at)
         self.lookAt()
 
     def translate(self, translation: List[float]):

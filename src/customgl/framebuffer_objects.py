@@ -21,8 +21,6 @@ from .objects.transformations import getOrthogonalProjectionMatrix, getCentralPr
 from .scenes.scene import Scene1
 
 
-
-
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
 

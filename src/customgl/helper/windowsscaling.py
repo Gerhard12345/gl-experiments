@@ -6,6 +6,7 @@ class WidthIdentifers(IntEnum):
     VIRTUAL_WIDTH = 8
     PHYSICAL_WIDTH = 118
 
+
 def get_windows_scaling_factor():
     dc = ctypes.windll.user32.GetDC(0)
     virtual_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.VIRTUAL_WIDTH)
