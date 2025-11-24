@@ -23,6 +23,7 @@ from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera, Camera1
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
+
 SCALE = get_windows_scaling_factor()
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
