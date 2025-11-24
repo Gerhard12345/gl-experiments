@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from customgl.objects import objects3d
+from src.customgl.objects import objects3d
 
 # Use small local dummy implementations to mock dependencies from the material and
 # transformations modules inside objects3d.  This keeps the tests focused on
