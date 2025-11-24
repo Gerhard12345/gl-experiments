@@ -24,8 +24,6 @@ from .objects.camera import Camera, Camera1
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
 
-
-
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
 
