@@ -12,4 +12,5 @@ def get_windows_scaling_factor():
     virtual_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.VIRTUAL_WIDTH)
     physical_width = ctypes.windll.gdi32.GetDeviceCaps(dc, WidthIdentifers.PHYSICAL_WIDTH)
     scale = physical_width / virtual_width
+    print(f"using a scaling factor of {scale}")
     return scale
