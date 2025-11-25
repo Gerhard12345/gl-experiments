@@ -49,7 +49,7 @@ jobs:
     - name: Test with pytest
       run: |
         source .venv/bin/activate
-        commit_sha=$(git rev-parse --short HEAD)
+        commit_sha=$(git rev-parse HEAD)
         branch=$(git rev-parse --abbrev-ref HEAD)
         python -m pytest --cov=src --cov-report=html:coverage --html-output=pytest-html-report --git-commit=$commit_sha --git-branch=$branch
       shell: bash
