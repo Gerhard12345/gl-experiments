@@ -24,7 +24,7 @@ from .scenes.scene import Scene1
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
 
-    def __init__(self, parent):
+    def __init__(self, parent, scale_factor: float):
         self.parent = parent
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(100, 400)
@@ -38,6 +38,7 @@ class GLWidget(QOpenGLWidget):
         self.buffer: VertexBuffer = None
         self.quad_on_screen_shader: Shader = None
         self.lightspace_depth_shader: Shader = None
+        self.scale_factor = scale_factor
 
     def initialize_fullscreen_quad(self):
         shader = Shader()
@@ -123,8 +124,8 @@ class GLWidget(QOpenGLWidget):
 
     def resizeGL(self, width, height):
         print(width, height)
-        w = int(width * get_windows_scaling_factor())
-        h = int(height * get_windows_scaling_factor())
+        w = int(width * self.scale_factor)
+        h = int(height * self.scale_factor)
         GL.glViewport(0, 0, w, h)
         self.framebuffer.resize((w, h))
         self.lightspace_depth_framebuffer.resize((w, h))
@@ -138,7 +139,7 @@ class GLWidget(QOpenGLWidget):
 
 
 class MyQWidget(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, scale_factor: float):
         super().__init__(parent=parent)
 
         combobox = QComboBox()
@@ -146,7 +147,7 @@ class MyQWidget(QWidget):
         combobox.activated.connect(self.activated)
         layout = QVBoxLayout()
         layout.addWidget(combobox)
-        self.gl = GLWidget(parent=self)
+        self.gl = GLWidget(parent=self, scale_factor=scale_factor)
         self.gl.format().setVersion(4, 2)
         self.gl.format().setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
         layout.addWidget(self.gl)
@@ -158,17 +159,18 @@ class MyQWidget(QWidget):
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, scale_factor: float):
         super().__init__()
 
         self.setWindowTitle("Custom GL app")
         self.resize(600, 600)
-        self.setCentralWidget(MyQWidget(self))
+        self.setCentralWidget(MyQWidget(self, scale_factor))
 
 
 def main():
+    scale_factor = get_windows_scaling_factor()
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = MainWindow(scale_factor)
     window.show()
     app.exec()
 

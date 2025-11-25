@@ -24,13 +24,10 @@ from .objects.camera import Camera, Camera1
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
 
 
-SCALE = get_windows_scaling_factor()
-
-
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
 
-    def __init__(self, parent):
+    def __init__(self, parent, scale_factor: float):
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(100, 400)
         self.scene: Scene = None
@@ -50,6 +47,7 @@ class GLWidget(QOpenGLWidget):
         self.do_update = False
         print("set up common shader data")
         self.common_shader_data: CommonShaderData = CommonShaderData()
+        self.scale_factor = scale_factor
 
     def initializeGL(self):
         print("initialize shadow renderer")
@@ -95,8 +93,8 @@ class GLWidget(QOpenGLWidget):
         )
 
     def resizeGL(self, width, height):
-        w = int(width * SCALE)
-        h = int(height * SCALE)
+        w = int(width * self.scale_factor)
+        h = int(height * self.scale_factor)
         self.shadow_renderer.set_size(width=w, height=h)
         self.rgb_renderer.set_size(width=w, height=h)
         self.point_shadow_renderer.set_size(width=w, height=h)
@@ -122,8 +120,8 @@ class GLWidget(QOpenGLWidget):
     def unproject(self, window_x: int, window_y: int):
         self.rgb_renderer.framebuffer.bind()
         render_width, render_height = self.rgb_renderer.framebuffer.width, self.rgb_renderer.framebuffer.height
-        window_x = int(window_x * SCALE)
-        window_y = render_height - int(window_y * SCALE)
+        window_x = int(window_x * self.scale_factor)
+        window_y = render_height - int(window_y * self.scale_factor)
         window_z = GL.glReadPixels(window_x, window_y, 1, 1, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT)
         window_x = window_x / render_width * 2 - 1
         window_y = window_y / render_height * 2 - 1
@@ -178,9 +176,8 @@ class GLWidget(QOpenGLWidget):
 
 
 class MyQWidget(QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, scale_factor):
         super().__init__(parent=parent)
-
         combobox = QComboBox()
         combobox.addItems(["Scene", "Shadow 1", "Shadow 2", "Shadow 3", "Shadow 4"])
         combobox.activated.connect(self.activated)
@@ -197,7 +194,7 @@ class MyQWidget(QWidget):
             button.pressed.connect(lambda val=button_parameter: self.toggle(val))
             button_layout.addWidget(button)
         layout.addLayout(button_layout)
-        self.gl = GLWidget(parent=self)
+        self.gl = GLWidget(parent=self, scale_factor=scale_factor)
         self.gl.format().setVersion(4, 2)
         self.gl.format().setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
         layout.addWidget(self.gl)
@@ -229,17 +226,17 @@ class MyQWidget(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, scale_factor):
         super().__init__()
         self.setWindowTitle("Custom GL app")
         self.resize(600, 600)
-        self.setCentralWidget(MyQWidget(self))
+        self.setCentralWidget(MyQWidget(self, scale_factor))
 
 
 def main():
+    scale_factor = get_windows_scaling_factor()
     app = QApplication(sys.argv)
-
-    window = MainWindow()
+    window = MainWindow(scale_factor)
     window.show()
     app.exec()
 

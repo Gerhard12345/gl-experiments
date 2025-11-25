@@ -49,7 +49,12 @@ jobs:
     - name: Test with pytest
       run: |
         source .venv/bin/activate
-        python -m pytest
+        python -m pytest --cov=src --cov-report=html tests
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages
+        path: |
+          index.html
     - name: build
       run: |
         source .venv/bin/activate
