@@ -30,7 +30,7 @@ build = [
 test = [
     "pytest == 8.2.0",
     "pytest-cov",
-    "pytest-html"
+    "pytest-html-plus"
 ]
 lint = [
     "black",
