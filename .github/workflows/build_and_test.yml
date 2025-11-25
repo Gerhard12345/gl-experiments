@@ -49,14 +49,18 @@ jobs:
     - name: Test with pytest
       run: |
         source .venv/bin/activate
-        python -m pytest --cov=src --cov-report=html:coverage --html=report.html --self-contained-html
-    - name: Upload coverage  
+        commit_sha = $(git rev-parse --short HEAD)
+        branch = $(git rev-parse --abbrev-ref HEAD)
+        python -m pytest --cov=src --cov-report=html:coverage --html-output=pytest-html-report --git-commit=$commit_sha --git-branch=$branch
+
+
+    - name: Upload coverage and test report
       uses: actions/upload-artifact@v4
       with:
         name: pytest results
         path: |
           coverage/
-          report.html
+          pytest-html-report/
     - name: build
       run: |
         source .venv/bin/activate
