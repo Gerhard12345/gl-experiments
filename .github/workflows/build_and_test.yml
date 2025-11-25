@@ -25,6 +25,7 @@ jobs:
     - name: Set up default python version
       run : |
         pip install toml
+        python -c "import re;import toml; print(toml.load('pyproject.toml')['project']['requires-python']")
         VERSION_STRING=$(python -c "import re;import toml; print(toml.load('pyproject.toml')['project']['requires-python']"))
         VERSION_NUMBER=$(echo $VERSION_STRING | python -c "import re; match = re.search(r'\d+\.\d+', sys.stdin.read()); print(match.group(0))")
         echo "PYTHON_VERSION=${VERSION_NUMBER}" >> $GITHUB_ENV
