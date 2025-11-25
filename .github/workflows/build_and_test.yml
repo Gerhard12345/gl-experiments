@@ -57,6 +57,7 @@ jobs:
         path: |
           coverage/
           report.html
+          assets/
     - name: build
       run: |
         source .venv/bin/activate
