@@ -51,8 +51,7 @@ jobs:
         source .venv/bin/activate
         commit_sha = $(git rev-parse --short HEAD)
         branch = $(git rev-parse --abbrev-ref HEAD)
-        python -m pytest --cov=src --cov-report=html:coverage --html-output=pytest-html-report --git-commit=$commit_sha --git-branch=$branch
-
+        python -m pytest --cov=src --cov-report=html:coverage --html-output=pytest-html-report
 
     - name: Upload coverage and test report
       uses: actions/upload-artifact@v4
