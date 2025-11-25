@@ -49,11 +49,11 @@ jobs:
     - name: Test with pytest
       run: |
         source .venv/bin/activate
-        python -m pytest --cov=src --cov-report=html tests > pytest.log
+        python -m pytest --cov=src --cov-report=html:index.html tests > pytest.log
     - name: Upload coverage  
       uses: actions/upload-artifact@v4
       with:
-        name: packages
+        name: pytest results
         path: |
           index.html
           pytest.log
