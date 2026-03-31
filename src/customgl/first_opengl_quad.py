@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -27,17 +28,17 @@ class GLWidget(QOpenGLWidget):
 
     def initializeGL(self):
         quad = Quad(
-            position=np.array([0, 0, 0]), material=Material(texturefilename="./customgl/textures/testing.png"), scale=np.array([1, 1, 1])
+            position=np.array([0, 0, 0]), material=Material(texturefilename=Path(__file__).parent.parent / "customgl" / "textures" / "testing.png"), scale=np.array([1, 1, 1])
         )
         cube = Cube(
-            position=np.array([0, 0, 0]), material=Material(texturefilename="./customgl/textures/testing.png"), scale=np.array([1, 1, 1])
+            position=np.array([0, 0, 0]), material=Material(texturefilename=Path(__file__).parent.parent / "customgl" / "textures" / "testing.png"), scale=np.array([1, 1, 1])
         )
         self.vq = View(quad)
         self.vc = View(cube)
         self.shader = Shader()
         self.shader.compile_shader(
-            vertex_code_file="./customgl/drawing/shaders/simple_with_perspective.vert",
-            fragment_code_file="./customgl/drawing/shaders/simple_with_perspective.frag",
+            vertex_code_file=Path(__file__).parent.parent / "customgl" / "drawing/shaders/simple_with_perspective.vert",
+            fragment_code_file=Path(__file__).parent.parent / "customgl" / "drawing/shaders/simple_with_perspective.frag",
         )
 
     def resizeGL(self, w: int, h: int) -> None:

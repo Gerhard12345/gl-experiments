@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 
 import numpy as np
@@ -43,8 +44,8 @@ class GLWidget(QOpenGLWidget):
     def initialize_fullscreen_quad(self):
         shader = Shader()
         shader.compile_shader(
-            "./customgl/drawing/shaders/simple.vert",
-            "./customgl/drawing/shaders/simple.frag",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/simple.vert",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/simple.frag",
         )
         self.quad_on_screen_shader = shader
         q = Quad(position=np.array([0.0, 0.0, 0.0]), material=Material(), scale=np.array([1, 1, 1]))
@@ -70,8 +71,8 @@ class GLWidget(QOpenGLWidget):
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
         shader.compile_shader(
-            "./customgl/drawing/shaders/simple_with_perspective.vert",
-            "./customgl/drawing/shaders/simple_with_perspective.frag",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/simple_with_perspective.vert",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/simple_with_perspective.frag",
         )
         self.shader = shader
         self._createVertexBuffer()
@@ -82,8 +83,8 @@ class GLWidget(QOpenGLWidget):
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
         shader.compile_shader(
-            "./customgl/drawing/shaders/shadow.vert",
-            "./customgl/drawing/shaders/shadow.frag",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/shadow.vert",
+            Path(__file__).parent.parent / "customgl/drawing/shaders/shadow.frag",
         )
         self.lightspace_depth_shader = shader
 
