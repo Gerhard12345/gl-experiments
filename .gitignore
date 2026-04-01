@@ -1,0 +1,15 @@
+*.pyc
+*.tar.gz
+*.whl
+/build/
+/dist/
+*.egg-info/
+__pycache__/
+# Ignore virtual environment directories
+venv/
+.venv/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
