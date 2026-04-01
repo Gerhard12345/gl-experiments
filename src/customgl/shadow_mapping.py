@@ -19,6 +19,9 @@ from .drawing.openglrenderer import (
     OpenGLCamera,
     CommonShaderData,
 )
+
+# Central definition for number of lights
+NUM_LIGHTS = 4
 from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera, Camera1
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
@@ -34,11 +37,11 @@ class GLWidget(QOpenGLWidget):
         self.scene: Scene = None
         self.camera: Camera = None
         print("set up shadow renderer")
-        self.shadow_renderer: Renderer = ShadowRenderer(n_lights=4)
+        self.shadow_renderer: Renderer = ShadowRenderer(n_lights=NUM_LIGHTS)
         print("set up point shadow renderer")
-        self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=4)
+        self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=NUM_LIGHTS)
         print("set up rgb renderer")
-        self.rgb_renderer: Renderer = RGBRenderer(n_lights=4)
+        self.rgb_renderer: Renderer = RGBRenderer(n_lights=NUM_LIGHTS)
         print("set up quad renderer")
         self.quad_on_screen_renderer = QuadRenderer()
         self.opengl_camera: OpenGLCamera = None
@@ -194,7 +197,7 @@ class MyQWidget(QWidget):
         
         # Row 1: Scene dropdown
         combobox = QComboBox()
-        combobox.addItems(["Scene", "Shadow 1", "Shadow 2", "Shadow 3", "Shadow 4"])
+        combobox.addItems(["Scene"] + [f"Shadow {i+1}" for i in range(NUM_LIGHTS)])
         combobox.activated.connect(self.activated)
         left_layout.addWidget(combobox)
         
@@ -242,7 +245,7 @@ class MyQWidget(QWidget):
         
         # Row 0: Lights dropdown
         lights_dropdown = QComboBox()
-        lights_dropdown.addItems(["Light 1", "Light 2", "Light 3", "Light 4"])
+        lights_dropdown.addItems([f"Light {i+1}" for i in range(NUM_LIGHTS)])
         right_layout.addWidget(lights_dropdown, 0, 0)
         
         right_layout.setRowStretch(1, 0)
