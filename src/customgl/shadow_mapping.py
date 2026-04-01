@@ -252,6 +252,8 @@ class MyQWidget(QWidget):
         
         # Row 2: Tab widget (aligned with GLWidget which starts at row 2)
         lighting_panel = LightingControlPanel()
+        lights_dropdown.currentTextChanged.connect(lighting_panel.switch_light)
+        lighting_panel.switch_light(lights_dropdown.currentText())
         right_layout.addWidget(lighting_panel, 2, 0)
         right_layout.setRowStretch(2, 1)  # Tab widget row expands to fill height
         right_panel.setLayout(right_layout)

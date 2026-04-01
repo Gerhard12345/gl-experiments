@@ -92,7 +92,7 @@ class GLWidget(QOpenGLWidget):
         self.lightspace_depth_shader.use()
         self.lightspace_depth_shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width(), self.height())))
         for i in range(self.scene.n_lights):
-            self.lightspace_depth_shader.setViewmat(self.scene.lights[i].light_space_camera.getViewmat())
+            self.lightspace_depth_shader.setViewmat(self.scene.Lights.lights[i].light_space_camera.getViewmat())
             self.lightspace_depth_framebuffer.bind(i)
             GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
             self.scene_view.draw(self.lightspace_depth_shader)

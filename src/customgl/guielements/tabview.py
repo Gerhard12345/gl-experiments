@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from typing import Dict, Tuple, List
 from numbers import Number
@@ -5,7 +6,7 @@ from numbers import Number
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QSlider,
     QLabel, QPushButton, QFrame, QPlainTextEdit, QSplitter, QSpacerItem,
-    QSizePolicy, QSplitterHandle
+    QSizePolicy, QSplitterHandle, QComboBox
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPainter, QColor, QPalette
@@ -97,7 +98,7 @@ class LightingControlPanel(QWidget):
     Panel containing color and geometry controls in tabbed interface.
     """
 
-    _TAB_DEFS: List[TabDef] = [
+    _DEFAULT_TAB_DEFS: List[TabDef] = [
         TabDef("Color", [
             SliderGroupDef("Ambient",         {"R": (0, 255), "G": (0, 255), "B": (0, 255)}, [128, 128, 128]),
             SliderGroupDef("Diffuse",         {"R": (0, 255), "G": (0, 255), "B": (0, 255)}, [128, 128, 128]),
@@ -111,9 +112,12 @@ class LightingControlPanel(QWidget):
             SliderGroupDef("Field of View", {"FOV": (1, 179)}, [60]),
         ]),
     ]
+    _TAB_DEFS: Dict[str, List[TabDef]] = {}
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._TAB_DEFS: Dict[str, List[TabDef]] = {}
+        self._current_light: str = ""
         self.init_ui()
 
     def init_ui(self):
@@ -125,7 +129,7 @@ class LightingControlPanel(QWidget):
         self.tab_widget = QTabWidget()
         self._sliders: Dict[str, Dict[str, Dict[str, QSlider]]] = {}
 
-        for tab_def in self._TAB_DEFS:
+        for tab_def in self._DEFAULT_TAB_DEFS:
             tab = QWidget()
             tab_layout = self._add_layout_to_tab(tab)
             self._sliders[tab_def.name] = {}
@@ -141,6 +145,31 @@ class LightingControlPanel(QWidget):
 
         layout.addWidget(self.tab_widget)
         self.setLayout(layout)
+
+    def switch_light(self, selected_light: str) -> None:
+        if not selected_light:
+            return
+        self._save_current_light_state()
+        if selected_light not in self._TAB_DEFS:
+            self._TAB_DEFS[selected_light] = copy.deepcopy(self._DEFAULT_TAB_DEFS)
+        self._load_light_state(selected_light)
+        self._current_light = selected_light
+
+    def _save_current_light_state(self) -> None:
+        if not self._current_light:
+            return
+        for tab_def in self._TAB_DEFS[self._current_light]:
+            for group_def in tab_def.slider_groups:
+                group_def.default_values = [
+                    self._sliders[tab_def.name][group_def.name][lbl].value()
+                    for lbl in group_def.slider_config
+                ]
+
+    def _load_light_state(self, light_name: str) -> None:
+        for tab_def in self._TAB_DEFS[light_name]:
+            for group_def in tab_def.slider_groups:
+                for lbl, val in zip(group_def.slider_config, group_def.default_values):
+                    self._sliders[tab_def.name][group_def.name][lbl].setValue(val)
 
     @property
     def color_config(self) -> ColorConfig:
@@ -164,7 +193,7 @@ class LightingControlPanel(QWidget):
         self._set_tab_config("Camera Settings", config)
 
     def _get_tab_config(self, tab_name: str, config_class):
-        tab_def = next(t for t in self._TAB_DEFS if t.name == tab_name)
+        tab_def = next(t for t in self._DEFAULT_TAB_DEFS if t.name == tab_name)
         return config_class(**{
             g.name.lower().replace(" ", "_"): {
                 lbl: self._sliders[tab_name][g.name][lbl].value()
@@ -174,7 +203,7 @@ class LightingControlPanel(QWidget):
         })
 
     def _set_tab_config(self, tab_name: str, config) -> None:
-        tab_def = next(t for t in self._TAB_DEFS if t.name == tab_name)
+        tab_def = next(t for t in self._DEFAULT_TAB_DEFS if t.name == tab_name)
         for g in tab_def.slider_groups:
             group_values = getattr(config, g.name.lower().replace(" ", "_"))
             for lbl in g.slider_config:
