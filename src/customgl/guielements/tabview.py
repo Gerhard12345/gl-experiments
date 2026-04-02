@@ -104,27 +104,37 @@ class LightingControlPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Dropdown to select which light is shown
-        self._dropdown = QComboBox()
-        self._dropdown.currentTextChanged.connect(self.switch_light)
-        layout.addWidget(self._dropdown)
-
-        # Three fixed tabs: RGB, Geometry, Camera Settings
         self.tab_widget = QTabWidget()
         # slider lookup: light_name -> prop_name -> label -> QSlider
         self._sliders: Dict[str, Dict[str, Dict[str, QSlider]]] = {}
         self._camera_sliders: Dict[str, Dict[str, QSlider]] = {}
-        self._rgb_tab = QWidget()
-        self._rgb_tab_layout = self._add_layout_to_tab(self._rgb_tab)
-        self.tab_widget.addTab(self._rgb_tab, "RGB")
-        self._geometry_tab = QWidget()
-        self._geometry_tab_layout = self._add_layout_to_tab(self._geometry_tab)
-        self.tab_widget.addTab(self._geometry_tab, "Geometry")
-        self._build_camera_tab(layout)
+
+        # --- Lights tab ---
+        lights_tab = QWidget()
+        lights_outer = QVBoxLayout()
+        lights_outer.setContentsMargins(5, 5, 5, 5)
+        lights_outer.setSpacing(5)
+        lights_tab.setLayout(lights_outer)
+
+        self._dropdown = QComboBox()
+        self._dropdown.currentTextChanged.connect(self.switch_light)
+        lights_outer.addWidget(self._dropdown)
+
+        self._rgb_tab_layout = QVBoxLayout()
+        self._geometry_tab_layout = QVBoxLayout()
+        lights_outer.addLayout(self._rgb_tab_layout)
+        lights_outer.addLayout(self._geometry_tab_layout)
+        lights_outer.addStretch()
+
+        self.tab_widget.addTab(lights_tab, "Lights")
+
+        # --- Camera tab ---
+        self._build_camera_tab()
+
         layout.addWidget(self.tab_widget)
         self.setLayout(layout)
 
-    def _build_camera_tab(self, parent_layout) -> None:
+    def _build_camera_tab(self) -> None:
         tab = QWidget()
         tab_layout = self._add_layout_to_tab(tab)
         self._camera_sliders[self._CAMERA_GROUP.name] = self._create_slider_group(
@@ -133,7 +143,7 @@ class LightingControlPanel(QWidget):
             default_values=self._CAMERA_GROUP.default_values,
         )
         tab_layout.addStretch()
-        self.tab_widget.addTab(tab, "Camera Settings")
+        self.tab_widget.addTab(tab, "Camera")
 
     _RGB_KEYS = frozenset({"R", "G", "B"})
 
@@ -173,8 +183,7 @@ class LightingControlPanel(QWidget):
                     slider_config=group_def.slider_config,
                     default_values=group_def.default_values,
                 )
-        self._rgb_tab_layout.addStretch()
-        self._geometry_tab_layout.addStretch()
+        pass  # outer stretch in lights tab handles spacing
 
     @pyqtSlot(list)
     def load_config(self, data: List[dict]) -> None:
@@ -262,15 +271,15 @@ class LightingControlPanel(QWidget):
         tab.setLayout(layout)
         return layout
 
-    def _create_slider_group(self, layout, title:str, slider_config:Dict[str,Tuple[Number, Number]], default_values:List[Number], orientation=Qt.Orientation.Vertical) -> Dict[str, QSlider]:
+    def _create_slider_group(self, layout, title:str, slider_config:Dict[str,Tuple[Number, Number]], default_values:List[Number], orientation=Qt.Orientation.Horizontal) -> Dict[str, QSlider]:
         """
         Add a separator and a group of sliders to the given layout.
         Args:
             layout: The layout to which the separator and sliders will be added.
             title: The title for the separator.
             slider_config: dict mapping slider labels to (min, max) tuples.
-            default_value: Default value for sliders (int or dict of label->value)
-            orientation: Qt.Orientation.Vertical or Qt.Orientation.Horizontal
+            default_values: Default values for sliders.
+            orientation: Qt.Orientation.Horizontal (default) or Qt.Orientation.Vertical
         """
         # Separator
         separator_layout = QHBoxLayout()
@@ -293,32 +302,48 @@ class LightingControlPanel(QWidget):
         layout.addWidget(separator_widget)
 
         # Sliders
-        group_layout = QVBoxLayout()
-        labels = list(slider_config.keys())
-        sliders_layout = QHBoxLayout() if orientation == Qt.Orientation.Vertical else QVBoxLayout()
-        sliders_layout.setSpacing(20)
         sliders: Dict[str, QSlider] = {}
-        for lbl, default_value in zip(labels, default_values):
-            slider_layout = QVBoxLayout()
-            slider = QSlider(orientation)
-            min_range, max_range = slider_config[lbl]
-            slider.setMinimum(min_range)
-            slider.setMaximum(max_range)
-            slider.setValue(default_value)
-            slider.valueChanged.connect(self._on_slider_changed)
-            sliders[lbl] = slider
-            slider_layout.addWidget(slider)
-            label_widget = QLabel(lbl)
-            label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            slider_layout.addWidget(label_widget, alignment=Qt.AlignmentFlag.AlignCenter)
-            sliders_layout.addLayout(slider_layout)
-        # Center the sliders
-        centered_layout = QHBoxLayout() if orientation == Qt.Orientation.Vertical else QVBoxLayout()
-        centered_layout.addStretch()
-        centered_layout.addLayout(sliders_layout)
-        centered_layout.addStretch()
-        group_layout.addLayout(centered_layout)
-        layout.addLayout(group_layout)
+        if orientation == Qt.Orientation.Horizontal:
+            sliders_layout = QVBoxLayout()
+            sliders_layout.setSpacing(4)
+            for lbl, default_value in zip(slider_config.keys(), default_values):
+                row = QHBoxLayout()
+                label_widget = QLabel(lbl)
+                label_widget.setFixedWidth(24)
+                label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                slider = QSlider(Qt.Orientation.Horizontal)
+                min_range, max_range = slider_config[lbl]
+                slider.setMinimum(min_range)
+                slider.setMaximum(max_range)
+                slider.setValue(default_value)
+                slider.valueChanged.connect(self._on_slider_changed)
+                sliders[lbl] = slider
+                row.addWidget(label_widget)
+                row.addWidget(slider)
+                sliders_layout.addLayout(row)
+            layout.addLayout(sliders_layout)
+        else:
+            sliders_layout = QHBoxLayout()
+            sliders_layout.setSpacing(20)
+            for lbl, default_value in zip(slider_config.keys(), default_values):
+                slider_layout = QVBoxLayout()
+                slider = QSlider(Qt.Orientation.Vertical)
+                min_range, max_range = slider_config[lbl]
+                slider.setMinimum(min_range)
+                slider.setMaximum(max_range)
+                slider.setValue(default_value)
+                slider.valueChanged.connect(self._on_slider_changed)
+                sliders[lbl] = slider
+                slider_layout.addWidget(slider)
+                label_widget = QLabel(lbl)
+                label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                slider_layout.addWidget(label_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+                sliders_layout.addLayout(slider_layout)
+            centered_layout = QHBoxLayout()
+            centered_layout.addStretch()
+            centered_layout.addLayout(sliders_layout)
+            centered_layout.addStretch()
+            layout.addLayout(centered_layout)
         return sliders
 
 
