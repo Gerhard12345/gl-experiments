@@ -49,11 +49,9 @@ class Scene:
     def __init__(self):
         self.n_lights = 4
         self.objects: List[Object3d] = []
-        self.Lights = Lights()
-        self.set_lights()
 
-    def set_lights(self):
-        pass
+    def set_lights(self) -> Lights:
+        return Lights()
 
     def update(self):
         for current_object in self.objects:
@@ -96,14 +94,15 @@ class Scene1(Scene):
     rotz = 45
     roty = 35.26
 
-    def set_lights(self):
-        self.Lights.set_directional_lights(
+    def set_lights(self) -> Lights:
+        lights = Lights()
+        lights.set_directional_lights(
             positions=[[0, 3, 2], [0, 0.5, 2], [0, 3, 2], [0, 0.5, 5]],
             ambient=[[0.5, 0.5, 0.5]] * 4,
             diffuse=[[0.8, 0.8, 0.8]] * 4,
             specular=[[1, 1, 1]] * 4,
         )
-        self.Lights.set_point_lights(
+        lights.set_point_lights(
             positions=[np.array([0, 3, 2]), np.array([0, 0.5, 2]), np.array([0, 0.5, 2]), np.array([0, 3, 2])],
             ambient=[[1.0, 1.0, 1.0]] * 4,
             diffuse=[[1.0, 1.0, 1.0]] * 4,
@@ -113,6 +112,7 @@ class Scene1(Scene):
             quadratic=[0.032] * 4,
             far=25,
         )
+        return lights
 
     def __init__(self):
         super().__init__()
@@ -217,14 +217,15 @@ class Scene3(Scene):
         object_views = build_room(room_definition)
         self.objects.extend(object_views)
 
-    def set_lights(self):
-        self.Lights.set_directional_lights(
+    def set_lights(self) -> Lights:
+        lights = Lights()
+        lights.set_directional_lights(
             positions=[[0, 10, -14], [0, 10, -14], [0, 10, 14], [0, 10, 14]],
             ambient=[[0.5, 0.5, 0.5]] * 4,
             diffuse=[[0.8, 0.8, 0.8]] * 4,
             specular=[[1, 1, 1]] * 4,
         )
-        self.Lights.set_point_lights(
+        lights.set_point_lights(
             positions=[np.array([6, 10, 12]), np.array([6, 10, 12]), np.array([-6, 10, 12]), np.array([-6, 10, 12])],
             ambient=[[0.5, 0.5, 0.5]] * 4,
             diffuse=[[0.8, 0.8, 0.8]] * 4,
@@ -234,6 +235,7 @@ class Scene3(Scene):
             quadratic=[0.0032] * 4,
             far=25,
         )
+        return lights
 
 
 class Scene4(Scene):
@@ -301,14 +303,15 @@ class Scene4(Scene):
         object_views = build_room(room_definition)
         self.objects.extend(object_views)
 
-    def set_lights(self):
-        self.Lights.set_directional_lights(
+    def set_lights(self) -> Lights:
+        lights = Lights()
+        lights.set_directional_lights(
             positions=[[-11, 16, -11], [-11, 16, 11], [11, 16, 11], [11, 16, -11]],
             ambient=[[0.25, 0.25, 0.25]] * 4,
             diffuse=[[0.5, 0.5, 0.5]] * 4,
             specular=[[1, 1, 1]] * 4,
         )
-        self.Lights.set_point_lights(
+        lights.set_point_lights(
             positions=[np.array([-11, -1, -11]), np.array([-11, -1, 11]), np.array([11, 1, -11]), np.array([11, 1, 11])],
             ambient=[[0.75, 0.75, 0.75]] * 4,
             diffuse=[[1, 1, 1]] * 4,
@@ -319,3 +322,4 @@ class Scene4(Scene):
             far=50,
             up_vectors=[[0, -1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
         )
+        return lights

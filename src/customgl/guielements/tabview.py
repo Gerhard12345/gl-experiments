@@ -1,6 +1,7 @@
-import copy
+import json
 from dataclasses import dataclass
-from typing import Dict, Tuple, List
+from pathlib import Path
+from typing import Dict, Tuple, List, Union
 from numbers import Number
 
 from PyQt6.QtWidgets import (
@@ -8,21 +9,9 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QFrame, QPlainTextEdit, QSplitter, QSpacerItem,
     QSizePolicy, QSplitterHandle, QComboBox
 )
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, pyqtSlot
+from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QPainter, QColor, QPalette
-
-
-@dataclass
-class ColorConfig:
-    ambient: Dict[str, int]
-    diffuse: Dict[str, int]
-    specular: Dict[str, int]
-
-
-@dataclass
-class GeometryConfig:
-    ambient_direction: Dict[str, int]
-    point_light_position: Dict[str, int]
 
 
 @dataclass
@@ -39,9 +28,10 @@ class SliderGroupDef:
 
 
 @dataclass
-class TabDef:
+class LightDef:
     name: str
-    slider_groups: List[SliderGroupDef]
+    type: str  # "Point", "Directional", "Ambient"
+    light_properties: Dict[str, SliderGroupDef]
 
 
 class CenterHighlightSplitterHandle(QSplitterHandle):
@@ -98,26 +88,15 @@ class LightingControlPanel(QWidget):
     Panel containing color and geometry controls in tabbed interface.
     """
 
-    _DEFAULT_TAB_DEFS: List[TabDef] = [
-        TabDef("Color", [
-            SliderGroupDef("Ambient",         {"R": (0, 255), "G": (0, 255), "B": (0, 255)}, [128, 128, 128]),
-            SliderGroupDef("Diffuse",         {"R": (0, 255), "G": (0, 255), "B": (0, 255)}, [128, 128, 128]),
-            SliderGroupDef("Specular",        {"R": (0, 255), "G": (0, 255), "B": (0, 255)}, [128, 128, 128]),
-        ]),
-        TabDef("Geometry", [
-            SliderGroupDef("Ambient direction",    {"X": (0, 100), "Y": (0, 100), "Z": (0, 100)}, [50, 50, 50]),
-            SliderGroupDef("Point light position", {"X": (0, 100), "Y": (0, 100), "Z": (0, 100)}, [50, 50, 50]),
-        ]),
-        TabDef("Camera Settings", [
-            SliderGroupDef("Field of View", {"FOV": (1, 179)}, [60]),
-        ]),
-    ]
-    _TAB_DEFS: Dict[str, List[TabDef]] = {}
+    slider_changed = pyqtSignal(list)
+
+    _CAMERA_GROUP = SliderGroupDef("Field of View", {"FOV": (1, 179)}, [60])
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._TAB_DEFS: Dict[str, List[TabDef]] = {}
+        self._TAB_DEFS: List[LightDef] = []
         self._current_light: str = ""
+        self._loading: bool = False
         self.init_ui()
 
     def init_ui(self):
@@ -125,89 +104,155 @@ class LightingControlPanel(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Create the tab widget
+        # Dropdown to select which light is shown
+        self._dropdown = QComboBox()
+        self._dropdown.currentTextChanged.connect(self.switch_light)
+        layout.addWidget(self._dropdown)
+
+        # Three fixed tabs: RGB, Geometry, Camera Settings
         self.tab_widget = QTabWidget()
+        # slider lookup: light_name -> prop_name -> label -> QSlider
         self._sliders: Dict[str, Dict[str, Dict[str, QSlider]]] = {}
-
-        for tab_def in self._DEFAULT_TAB_DEFS:
-            tab = QWidget()
-            tab_layout = self._add_layout_to_tab(tab)
-            self._sliders[tab_def.name] = {}
-            for group_def in tab_def.slider_groups:
-                self._sliders[tab_def.name][group_def.name] = self._create_slider_group(
-                    tab_layout, group_def.name,
-                    slider_config=group_def.slider_config,
-                    default_values=group_def.default_values,
-                    orientation=group_def.orientation,
-                )
-            tab_layout.addStretch()
-            self.tab_widget.addTab(tab, tab_def.name)
-
+        self._camera_sliders: Dict[str, Dict[str, QSlider]] = {}
+        self._rgb_tab = QWidget()
+        self._rgb_tab_layout = self._add_layout_to_tab(self._rgb_tab)
+        self.tab_widget.addTab(self._rgb_tab, "RGB")
+        self._geometry_tab = QWidget()
+        self._geometry_tab_layout = self._add_layout_to_tab(self._geometry_tab)
+        self.tab_widget.addTab(self._geometry_tab, "Geometry")
+        self._build_camera_tab(layout)
         layout.addWidget(self.tab_widget)
         self.setLayout(layout)
+
+    def _build_camera_tab(self, parent_layout) -> None:
+        tab = QWidget()
+        tab_layout = self._add_layout_to_tab(tab)
+        self._camera_sliders[self._CAMERA_GROUP.name] = self._create_slider_group(
+            tab_layout, self._CAMERA_GROUP.name,
+            slider_config=self._CAMERA_GROUP.slider_config,
+            default_values=self._CAMERA_GROUP.default_values,
+        )
+        tab_layout.addStretch()
+        self.tab_widget.addTab(tab, "Camera Settings")
+
+    _RGB_KEYS = frozenset({"R", "G", "B"})
+
+    def _tab_layout_for(self, group_def: SliderGroupDef) -> QVBoxLayout:
+        """Route a SliderGroupDef to the RGB or Geometry tab layout."""
+        if set(group_def.slider_config.keys()) <= self._RGB_KEYS:
+            return self._rgb_tab_layout
+        return self._geometry_tab_layout
+
+    def _clear_light_tabs(self) -> None:
+        """Remove all widgets from both light tab layouts."""
+        for layout in (self._rgb_tab_layout, self._geometry_tab_layout):
+            while layout.count():
+                item = layout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+                elif item.layout():
+                    self._delete_layout(item.layout())
+
+    def _delete_layout(self, layout) -> None:
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._delete_layout(item.layout())
+
+    def _populate_light_tabs(self, light_def: LightDef) -> None:
+        """Fill RGB and Geometry tabs with sliders for the given LightDef."""
+        if light_def.name not in self._sliders:
+            self._sliders[light_def.name] = {}
+        for prop_name, group_def in light_def.light_properties.items():
+            if prop_name not in self._sliders[light_def.name]:
+                self._sliders[light_def.name][prop_name] = self._create_slider_group(
+                    self._tab_layout_for(group_def), prop_name,
+                    slider_config=group_def.slider_config,
+                    default_values=group_def.default_values,
+                )
+        self._rgb_tab_layout.addStretch()
+        self._geometry_tab_layout.addStretch()
+
+    @pyqtSlot(list)
+    def load_config(self, data: List[dict]) -> None:
+        self._TAB_DEFS = []
+        self._sliders = {}
+        self._dropdown.blockSignals(True)
+        self._dropdown.clear()
+
+        for light_dict in data:
+            light_def = LightDef(
+                name=light_dict["name"],
+                type=light_dict["type"],
+                light_properties={
+                    prop_name: SliderGroupDef(
+                        name=prop_name,
+                        slider_config={k: tuple(v) for k, v in prop_data["slider_config"].items()},
+                        default_values=list(prop_data["default_values"]),
+                    )
+                    for prop_name, prop_data in light_dict["light_properties"].items()
+                },
+            )
+            self._TAB_DEFS.append(light_def)
+            self._dropdown.addItem(light_def.name)
+
+        self._dropdown.blockSignals(False)
+        if self._TAB_DEFS:
+            self.switch_light(self._TAB_DEFS[0].name)
 
     def switch_light(self, selected_light: str) -> None:
         if not selected_light:
             return
         self._save_current_light_state()
-        if selected_light not in self._TAB_DEFS:
-            self._TAB_DEFS[selected_light] = copy.deepcopy(self._DEFAULT_TAB_DEFS)
-        self._load_light_state(selected_light)
+        self._clear_light_tabs()
+        light_def = next((l for l in self._TAB_DEFS if l.name == selected_light), None)
+        if light_def is None:
+            return
+        self._loading = True
+        try:
+            self._populate_light_tabs(light_def)
+            self._load_light_state(light_def)
+        finally:
+            self._loading = False
         self._current_light = selected_light
 
     def _save_current_light_state(self) -> None:
-        if not self._current_light:
+        if not self._current_light or self._current_light not in self._sliders:
             return
-        for tab_def in self._TAB_DEFS[self._current_light]:
-            for group_def in tab_def.slider_groups:
-                group_def.default_values = [
-                    self._sliders[tab_def.name][group_def.name][lbl].value()
-                    for lbl in group_def.slider_config
-                ]
+        light_def = next((l for l in self._TAB_DEFS if l.name == self._current_light), None)
+        if light_def is None:
+            return
+        for prop_name, group_def in light_def.light_properties.items():
+            group_def.default_values = [
+                self._sliders[self._current_light][prop_name][lbl].value()
+                for lbl in group_def.slider_config
+            ]
 
-    def _load_light_state(self, light_name: str) -> None:
-        for tab_def in self._TAB_DEFS[light_name]:
-            for group_def in tab_def.slider_groups:
-                for lbl, val in zip(group_def.slider_config, group_def.default_values):
-                    self._sliders[tab_def.name][group_def.name][lbl].setValue(val)
+    def _load_light_state(self, light_def: LightDef) -> None:
+        for prop_name, group_def in light_def.light_properties.items():
+            for lbl, val in zip(group_def.slider_config.keys(), group_def.default_values):
+                self._sliders[light_def.name][prop_name][lbl].setValue(val)
 
-    @property
-    def color_config(self) -> ColorConfig:
-        return self._get_tab_config("Color", ColorConfig)
-
-    def set_color_config(self, config: ColorConfig) -> None:
-        self._set_tab_config("Color", config)
-
-    @property
-    def geometry_config(self) -> GeometryConfig:
-        return self._get_tab_config("Geometry", GeometryConfig)
-
-    def set_geometry_config(self, config: GeometryConfig) -> None:
-        self._set_tab_config("Geometry", config)
+    def _on_slider_changed(self, _: int) -> None:
+        if self._loading:
+            return
+        self._save_current_light_state()
+        self.slider_changed.emit(self._TAB_DEFS)
 
     @property
     def camera_config(self) -> CameraConfig:
-        return self._get_tab_config("Camera Settings", CameraConfig)
+        return CameraConfig(
+            field_of_view={
+                lbl: self._camera_sliders[self._CAMERA_GROUP.name][lbl].value()
+                for lbl in self._CAMERA_GROUP.slider_config
+            }
+        )
 
     def set_camera_config(self, config: CameraConfig) -> None:
-        self._set_tab_config("Camera Settings", config)
-
-    def _get_tab_config(self, tab_name: str, config_class):
-        tab_def = next(t for t in self._DEFAULT_TAB_DEFS if t.name == tab_name)
-        return config_class(**{
-            g.name.lower().replace(" ", "_"): {
-                lbl: self._sliders[tab_name][g.name][lbl].value()
-                for lbl in g.slider_config
-            }
-            for g in tab_def.slider_groups
-        })
-
-    def _set_tab_config(self, tab_name: str, config) -> None:
-        tab_def = next(t for t in self._DEFAULT_TAB_DEFS if t.name == tab_name)
-        for g in tab_def.slider_groups:
-            group_values = getattr(config, g.name.lower().replace(" ", "_"))
-            for lbl in g.slider_config:
-                self._sliders[tab_name][g.name][lbl].setValue(group_values[lbl])
+        for lbl, val in config.field_of_view.items():
+            self._camera_sliders[self._CAMERA_GROUP.name][lbl].setValue(val)
 
     def _add_layout_to_tab(self, tab: QWidget) -> QVBoxLayout:
         layout = QVBoxLayout()
@@ -259,6 +304,7 @@ class LightingControlPanel(QWidget):
             slider.setMinimum(min_range)
             slider.setMaximum(max_range)
             slider.setValue(default_value)
+            slider.valueChanged.connect(self._on_slider_changed)
             sliders[lbl] = slider
             slider_layout.addWidget(slider)
             label_widget = QLabel(lbl)
@@ -273,3 +319,23 @@ class LightingControlPanel(QWidget):
         group_layout.addLayout(centered_layout)
         layout.addLayout(group_layout)
         return sliders
+
+
+class LightingPanelConfig(QObject):
+    """
+    Loads a light config JSON and emits lights_loaded(list) with one signal.
+    Connect to the load_config slot of LightingControlPanel.
+    """
+
+    lights_loaded = pyqtSignal(list)
+
+    def __init__(self, source: Union[Path, list], parent=None):
+        super().__init__(parent)
+        if isinstance(source, list):
+            self._data: list = source
+        else:
+            with open(source, "r") as f:
+                self._data: list = json.load(f)
+
+    def load(self) -> None:
+        self.lights_loaded.emit(self._data)

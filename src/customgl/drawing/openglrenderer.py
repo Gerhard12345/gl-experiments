@@ -7,6 +7,7 @@ from .customframebuffer import CustomFrameBuffer
 from .objectviews import SceneView
 from .objectviews import VertexBuffer
 from .shader import Shader
+from .lights import Lights
 from ..objects.transformations import getOrthogonalProjectionMatrix, getCentralProjectionMatrix
 from ..objects.material import Material
 from ..objects.objects3d import Quad
@@ -103,7 +104,7 @@ class Renderer:
         self.height = height
         self.framebuffer.resize((width, height))
 
-    def render(self, scene_view: SceneView):
+    def render(self, scene_view: SceneView, lights: Lights = None):
         pass
 
 
@@ -121,13 +122,13 @@ class ShadowRenderer(Renderer):
         shader.compile_shader(self.shader_directory / "shadow.vert", self.shader_directory / "shadow.frag")
         self.shader = shader
 
-    def render(self, scene_view: SceneView):
+    def render(self, scene_view: SceneView, lights: Lights = None):
         scene = scene_view.scene
         self.shader.use()
         GL.glViewport(0, 0, self.width, self.height)
         self.shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width, self.height)))
         for i in range(scene.n_lights):
-            self.shader.setViewmat(scene.Lights.lights[i].light_space_camera.getViewmat())
+            self.shader.setViewmat(lights.lights[i].light_space_camera.getViewmat())
             self.framebuffer.bind(i)
             GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
             GL.glEnable(GL.GL_CULL_FACE)
@@ -154,17 +155,16 @@ class PointShadowRenderer(Renderer):
         )
         self.shader = shader
 
-    def render(self, scene_view: SceneView):
-        scene = scene_view.scene
+    def render(self, scene_view: SceneView, lights: Lights = None):
         self.shader.use()
         self.framebuffer.bind()
         GL.glViewport(0, 0, self.width, self.height)
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         for i in range(self.n_lights):
             self.shader.setMatrix4fv(
-                [light_space_camera.getViewmat() for light_space_camera in scene.Lights.point_lights[i].light_space_camera], uniform_name="u_view_mat"
+                [light_space_camera.getViewmat() for light_space_camera in lights.point_lights[i].light_space_camera], uniform_name="u_view_mat"
             )
-            self.shader.setVec3fv([scene.Lights.point_lights[i].position], uniform_name="lightPos")
+            self.shader.setVec3fv([lights.point_lights[i].position], uniform_name="lightPos")
             self.shader.setInt(i, "light_index")
             self.framebuffer.bind()
             GL.glEnable(GL.GL_CULL_FACE)
@@ -195,19 +195,18 @@ class RGBRenderer(Renderer):
         shader.compile_shader(self.shader_directory / "main.vert", self.shader_directory / "main.frag")
         self.shader = shader
 
-    def render(self, scene_view: SceneView):
-        scene = scene_view.scene
+    def render(self, scene_view: SceneView, lights: Lights = None):
         self.shader.use()
         GL.glViewport(0, 0, self.width, self.height)
-        self.shader.setLightPositions([light.light_space_camera.getViewingPosition() for light in scene.Lights.lights])
-        self.shader.setMatrix4fv([light.light_space_camera.getViewmat() for light in scene.Lights.lights], "u_view_mat_lightspace")
+        self.shader.setLightPositions([light.light_space_camera.getViewingPosition() for light in lights.lights])
+        self.shader.setMatrix4fv([light.light_space_camera.getViewmat() for light in lights.lights], "u_view_mat_lightspace")
 
-        for i, light in enumerate(scene.Lights.lights):
+        for i, light in enumerate(lights.lights):
             self.shader.setVec3fv([light.direction], f"u_directional_lights[{i}].direction")
             self.shader.setVec3fv([light.ambient], f"u_directional_lights[{i}].ambient")
             self.shader.setVec3fv([light.diffuse], f"u_directional_lights[{i}].diffuse")
             self.shader.setVec3fv([light.specular], f"u_directional_lights[{i}].specular")
-        for i, light in enumerate(scene.Lights.point_lights):
+        for i, light in enumerate(lights.point_lights):
             self.shader.setVec3fv([light.position], f"u_point_lights[{i}].position")
             self.shader.setVec3fv([light.ambient], f"u_point_lights[{i}].ambient")
             self.shader.setVec3fv([light.diffuse], f"u_point_lights[{i}].diffuse")

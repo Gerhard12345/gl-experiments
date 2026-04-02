@@ -1,0 +1,722 @@
+[
+    {
+        "name": "Directional 1",
+        "type": "Directional",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    64,
+                    64,
+                    64
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Direction": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        20
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    -11,
+                    16,
+                    -11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Directional 2",
+        "type": "Directional",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    64,
+                    64,
+                    64
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Direction": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        20
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    -11,
+                    16,
+                    11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Directional 3",
+        "type": "Directional",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    64,
+                    64,
+                    64
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Direction": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        20
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    11,
+                    16,
+                    11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Directional 4",
+        "type": "Directional",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    64,
+                    64,
+                    64
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Direction": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        20
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    11,
+                    16,
+                    -11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Point 1",
+        "type": "Point",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    191,
+                    191,
+                    191
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Position": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        5
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    -11,
+                    -1,
+                    -11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Point 2",
+        "type": "Point",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    191,
+                    191,
+                    191
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Position": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        5
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    -11,
+                    -1,
+                    11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Point 3",
+        "type": "Point",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    191,
+                    191,
+                    191
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Position": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        5
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    11,
+                    1,
+                    -11
+                ]
+            }
+        }
+    },
+    {
+        "name": "Point 4",
+        "type": "Point",
+        "light_properties": {
+            "Ambient": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    191,
+                    191,
+                    191
+                ]
+            },
+            "Diffuse": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Specular": {
+                "slider_config": {
+                    "R": [
+                        0,
+                        255
+                    ],
+                    "G": [
+                        0,
+                        255
+                    ],
+                    "B": [
+                        0,
+                        255
+                    ]
+                },
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
+            },
+            "Position": {
+                "slider_config": {
+                    "X": [
+                        -20,
+                        20
+                    ],
+                    "Y": [
+                        -5,
+                        5
+                    ],
+                    "Z": [
+                        -20,
+                        20
+                    ]
+                },
+                "default_values": [
+                    11,
+                    1,
+                    11
+                ]
+            }
+        }
+    }
+]

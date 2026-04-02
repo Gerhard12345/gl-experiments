@@ -135,6 +135,6 @@ void main()
         vec3 specular_intensity = specular * pow(max(dot(halfway_direction, normal), 0.0), u_material.specular_power) * u_directional_lights[i].specular;
         
         float shadow = is_in_shadow(fs_in.fragment_position_in_light_space, -normal, i);
-        //fragmentcolor += 1.0 / (N_POINT_LIGHTS+N_DIRECTIONAL_LIGHTS) * vec4((ambient_intensity + (1-shadow) * (diffuse_intensity + specular_intensity)).xyz, 1.0) * color;
+        fragmentcolor += 1.0 / (N_POINT_LIGHTS+N_DIRECTIONAL_LIGHTS) * vec4((ambient_intensity + (1-shadow) * (diffuse_intensity + specular_intensity)).xyz, 1.0) * color;
     }
 }
