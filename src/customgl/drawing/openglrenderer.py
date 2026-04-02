@@ -201,14 +201,13 @@ class RGBRenderer(Renderer):
         self.shader.setLightPositions([light.light_space_camera.getViewingPosition() for light in lights.lights])
         self.shader.setMatrix4fv([light.light_space_camera.getViewmat() for light in lights.lights], "u_view_mat_lightspace")
 
+        self.shader.setVec3fv([lights.ambient_light.color], "u_ambient_light.color")
         for i, light in enumerate(lights.lights):
             self.shader.setVec3fv([light.direction], f"u_directional_lights[{i}].direction")
-            self.shader.setVec3fv([light.ambient], f"u_directional_lights[{i}].ambient")
             self.shader.setVec3fv([light.diffuse], f"u_directional_lights[{i}].diffuse")
             self.shader.setVec3fv([light.specular], f"u_directional_lights[{i}].specular")
         for i, light in enumerate(lights.point_lights):
             self.shader.setVec3fv([light.position], f"u_point_lights[{i}].position")
-            self.shader.setVec3fv([light.ambient], f"u_point_lights[{i}].ambient")
             self.shader.setVec3fv([light.diffuse], f"u_point_lights[{i}].diffuse")
             self.shader.setVec3fv([light.specular], f"u_point_lights[{i}].specular")
             self.shader.setFloat(light.constant, f"u_point_lights[{i}].constant")

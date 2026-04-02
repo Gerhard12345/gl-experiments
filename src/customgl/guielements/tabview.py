@@ -152,6 +152,7 @@ class LightingControlPanel(QWidget):
                     item.widget().deleteLater()
                 elif item.layout():
                     self._delete_layout(item.layout())
+        self._sliders.clear()
 
     def _delete_layout(self, layout) -> None:
         while layout.count():

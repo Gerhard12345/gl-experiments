@@ -18,7 +18,6 @@ uniform float far_plane;
 
 struct PointLight {
     vec3 position;
-    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
     float constant;
@@ -28,7 +27,6 @@ struct PointLight {
 
 struct DirectionalLight {
     vec3 direction;
-    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
 };
@@ -36,6 +34,11 @@ struct DirectionalLight {
 
 uniform DirectionalLight u_directional_lights[N_DIRECTIONAL_LIGHTS];
 uniform PointLight u_point_lights[N_POINT_LIGHTS];
+
+struct AmbientLight {
+    vec3 color;
+};
+uniform AmbientLight u_ambient_light;
 
 struct Material {
     sampler2D diffuse;
@@ -117,7 +120,7 @@ void main()
         float light_to_fragment_distance = length(light_to_fragment_vec);
         vec3 halfway_direction = normalize(light_to_fragment_direction + viewing_direction);
 
-        vec3 ambient_intensity = u_point_lights[i].ambient * ambient_occlusion;
+        vec3 ambient_intensity = u_ambient_light.color * ambient_occlusion;
         vec3 diffuse_intensity = max(dot(light_to_fragment_direction, normal), 0.0) * u_point_lights[i].diffuse;
         vec3 specular_intensity = specular * pow(max(dot(halfway_direction, normal), 0.0), u_material.specular_power) * u_point_lights[i].specular;
         
@@ -130,7 +133,7 @@ void main()
         vec3 light_to_fragment_direction = normalize(light_to_fragment_vec);
         vec3 halfway_direction = normalize(light_to_fragment_direction + viewing_direction);
 
-        vec3 ambient_intensity = u_directional_lights[i].ambient * ambient_occlusion;
+        vec3 ambient_intensity = u_ambient_light.color * ambient_occlusion;
         vec3 diffuse_intensity = max(dot(light_to_fragment_direction, normal),0.0) * u_directional_lights[i].diffuse;
         vec3 specular_intensity = specular * pow(max(dot(halfway_direction, normal), 0.0), u_material.specular_power) * u_directional_lights[i].specular;
         

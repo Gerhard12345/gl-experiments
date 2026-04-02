@@ -10,9 +10,13 @@ _CUBE_FACE_UP_VECTORS_DEFAULT = [[0, -1, 0], [0, -1, 0], [0, 0, -1], [0, 0, -1],
 
 
 @dataclass
+class AmbientLight:
+    color: List[float] = None
+
+
+@dataclass
 class DirectionalLight:
     light_space_camera: Camera = None
-    ambient: List[float] = None
     diffuse: List[float] = None
     specular: List[float] = None
 
@@ -27,7 +31,6 @@ class DirectionalLight:
 @dataclass
 class PointLight:
     light_space_camera: List[Camera] = None
-    ambient: List[float] = None
     diffuse: List[float] = None
     specular: List[float] = None
     constant: float = None
@@ -47,6 +50,7 @@ class Lights:
     def __init__(self):
         self._lights: List[DirectionalLight] = []
         self._point_lights: List[PointLight] = []
+        self._ambient_light: AmbientLight = AmbientLight()
 
     @property
     def lights(self) -> List[DirectionalLight]:
@@ -56,6 +60,13 @@ class Lights:
     def point_lights(self) -> List[PointLight]:
         return self._point_lights
 
+    @property
+    def ambient_light(self) -> AmbientLight:
+        return self._ambient_light
+
+    def set_ambient_light(self, color: List[float]) -> None:
+        self._ambient_light = AmbientLight(color=color)
+
     def set_lights(self, lights: List[DirectionalLight], point_lights: List[PointLight]) -> None:
         self._lights = lights
         self._point_lights = point_lights
@@ -63,19 +74,17 @@ class Lights:
     def set_directional_lights(
         self,
         positions: List,
-        ambient: List[List[float]],
         diffuse: List[List[float]],
         specular: List[List[float]],
     ) -> None:
         self._lights = [
-            DirectionalLight(light_space_camera=Camera(eye=pos), ambient=amb, diffuse=diff, specular=spec)
-            for pos, amb, diff, spec in zip(positions, ambient, diffuse, specular)
+            DirectionalLight(light_space_camera=Camera(eye=pos), diffuse=diff, specular=spec)
+            for pos, diff, spec in zip(positions, diffuse, specular)
         ]
 
     def set_point_lights(
         self,
         positions: List,
-        ambient: List[List[float]],
         diffuse: List[List[float]],
         specular: List[List[float]],
         constant: List[float],
@@ -93,14 +102,13 @@ class Lights:
                     Camera(eye=np.array(pos), at=np.array(pos) + np.array(direction), up=up, fov=0.5 * np.pi, near=near, far=far)
                     for direction, up in zip(_CUBE_FACE_DIRECTIONS, up_vectors)
                 ],
-                ambient=amb,
                 diffuse=diff,
                 specular=spec,
                 constant=const,
                 linear=lin,
                 quadratic=quad,
             )
-            for pos, amb, diff, spec, const, lin, quad in zip(
-                positions, ambient, diffuse, specular, constant, linear, quadratic
+            for pos, diff, spec, const, lin, quad in zip(
+                positions, diffuse, specular, constant, linear, quadratic
             )
         ]
