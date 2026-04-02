@@ -46,8 +46,8 @@ class LightSettingsConverter:
                 diffuse  =[self._normalize_rgb(self._group_values(l.light_properties["Diffuse"])) for l in pt_lights],
                 specular =[self._normalize_rgb(self._group_values(l.light_properties["Specular"])) for l in pt_lights],
                 constant =[1.0]  * n,
-                linear   =[0.09] * n,
-                quadratic=[0.032]* n,
+                linear   =[0.09 * 0.025] * n,
+                quadratic=[0.032 * 0.025]* n,
             )
 
         return lights

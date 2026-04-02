@@ -13,18 +13,18 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [204, 204, 204]
+                "default_values": [128, 128, 128]
             },
             "Specular": {
                 "default_values": [255, 255, 255]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 20],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 3, 2]
+                "default_values": [-11, 16, -11]
             }
         }
     },
@@ -33,18 +33,18 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [204, 204, 204]
+                "default_values": [128, 128, 128]
             },
             "Specular": {
                 "default_values": [255, 255, 255]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 20],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 1, 2]
+                "default_values": [-11, 16, 11]
             }
         }
     },
@@ -53,18 +53,18 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [204, 204, 204]
+                "default_values": [128, 128, 128]
             },
             "Specular": {
                 "default_values": [255, 255, 255]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 20],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 3, 2]
+                "default_values": [11, 16, 11]
             }
         }
     },
@@ -73,18 +73,18 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [204, 204, 204]
+                "default_values": [128, 128, 128]
             },
             "Specular": {
                 "default_values": [255, 255, 255]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 20],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 1, 5]
+                "default_values": [11, 16, -11]
             }
         }
     },
@@ -100,11 +100,11 @@
             },
             "Position": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 5],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 3, 2]
+                "default_values": [-11, -1, -11]
             }
         }
     },
@@ -120,11 +120,11 @@
             },
             "Position": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 5],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 1, 2]
+                "default_values": [-11, -1, 11]
             }
         }
     },
@@ -140,11 +140,11 @@
             },
             "Position": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 5],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 1, 2]
+                "default_values": [11, 1, -11]
             }
         }
     },
@@ -160,11 +160,11 @@
             },
             "Position": {
                 "ranges": {
-                    "x": [-10, 10],
-                    "y": [-5, 10],
-                    "z": [-5, 10]
+                    "x": [-20, 20],
+                    "y": [-5, 5],
+                    "z": [-20, 20]
                 },
-                "default_values": [0, 3, 2]
+                "default_values": [11, 1, 11]
             }
         }
     }

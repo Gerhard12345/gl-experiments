@@ -34,6 +34,23 @@ class LightDef:
     light_properties: Dict[str, SliderGroupDef]
 
 
+_RGB_SLIDER_CONFIG = {"R": (0, 255), "G": (0, 255), "B": (0, 255)}
+_VECTOR_COMPONENTS = ("X", "Y", "Z")
+
+
+def _build_slider_config(prop_name: str, prop_data: dict) -> Dict[str, Tuple[int, int]]:
+    if "slider_config" in prop_data:
+        return {k: tuple(v) for k, v in prop_data["slider_config"].items()}
+
+    if prop_name in {"Color", "Diffuse", "Specular"}:
+        return dict(_RGB_SLIDER_CONFIG)
+
+    if "ranges" in prop_data:
+        return {component: tuple(prop_data["ranges"][component.lower()]) for component in _VECTOR_COMPONENTS}
+
+    raise KeyError(f"Missing slider configuration for light property '{prop_name}'")
+
+
 class CenterHighlightSplitterHandle(QSplitterHandle):
     """Custom splitter handle that highlights only in the center third."""
     
@@ -199,7 +216,7 @@ class LightingControlPanel(QWidget):
                 light_properties={
                     prop_name: SliderGroupDef(
                         name=prop_name,
-                        slider_config={k: tuple(v) for k, v in prop_data["slider_config"].items()},
+                        slider_config=_build_slider_config(prop_name, prop_data),
                         default_values=list(prop_data["default_values"]),
                     )
                     for prop_name, prop_data in light_dict["light_properties"].items()
@@ -362,6 +379,9 @@ class LightingPanelConfig(QObject):
         else:
             with open(source, "r") as f:
                 self._data: list = json.load(f)
+
+        self.num_directional_lights: int = sum(1 for light in self._data if light.get("type") == "Directional")
+        self.num_point_lights: int = sum(1 for light in self._data if light.get("type") == "Point")
 
     def load(self) -> None:
         self.lights_loaded.emit(self._data)
