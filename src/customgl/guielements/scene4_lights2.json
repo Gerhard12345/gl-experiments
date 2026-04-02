@@ -4,7 +4,11 @@
         "type": "Ambient",
         "light_properties": {
             "Color": {
-                "default_values": [128, 128, 128]
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
             }
         }
     },
@@ -13,18 +17,40 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [128, 128, 128]
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 20],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        20
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [-11, 16, -11]
+                "default_values": [
+                    -11,
+                    16,
+                    -11
+                ],
+                "step_size": 0.05
             }
         }
     },
@@ -33,18 +59,40 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [128, 128, 128]
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 20],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        20
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [-11, 16, 11]
+                "default_values": [
+                    -11,
+                    16,
+                    11
+                ],
+                "step_size": 0.05
             }
         }
     },
@@ -53,18 +101,40 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [128, 128, 128]
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 20],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        20
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [11, 16, 11]
+                "default_values": [
+                    11,
+                    16,
+                    11
+                ],
+                "step_size": 0.05
             }
         }
     },
@@ -73,18 +143,40 @@
         "type": "Directional",
         "light_properties": {
             "Diffuse": {
-                "default_values": [128, 128, 128]
+                "default_values": [
+                    128,
+                    128,
+                    128
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Direction": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 20],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        20
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [11, 16, -11]
+                "default_values": [
+                    11,
+                    16,
+                    -11
+                ],
+                "step_size": 0.05
             }
         }
     },
@@ -93,18 +185,40 @@
         "type": "Point",
         "light_properties": {
             "Diffuse": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Position": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 5],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        5
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [-11, -1, -11]
+                "default_values": [
+                    -11,
+                    -1,
+                    -11
+                ],
+                "step_size": 0.1
             }
         }
     },
@@ -113,18 +227,40 @@
         "type": "Point",
         "light_properties": {
             "Diffuse": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Position": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 5],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        5
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [-11, -1, 11]
+                "default_values": [
+                    -11,
+                    -1,
+                    11
+                ],
+                "step_size": 0.1
             }
         }
     },
@@ -133,18 +269,40 @@
         "type": "Point",
         "light_properties": {
             "Diffuse": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Position": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 5],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        5
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [11, 1, -11]
+                "default_values": [
+                    11,
+                    1,
+                    -11
+                ],
+                "step_size": 0.1
             }
         }
     },
@@ -153,18 +311,40 @@
         "type": "Point",
         "light_properties": {
             "Diffuse": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Specular": {
-                "default_values": [255, 255, 255]
+                "default_values": [
+                    255,
+                    255,
+                    255
+                ]
             },
             "Position": {
                 "ranges": {
-                    "x": [-20, 20],
-                    "y": [-5, 5],
-                    "z": [-20, 20]
+                    "x": [
+                        -20,
+                        20
+                    ],
+                    "y": [
+                        -5,
+                        5
+                    ],
+                    "z": [
+                        -20,
+                        20
+                    ]
                 },
-                "default_values": [11, 1, 11]
+                "default_values": [
+                    11,
+                    1,
+                    11
+                ],
+                "step_size": 0.1
             }
         }
     }

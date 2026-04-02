@@ -25,6 +25,7 @@ class SliderGroupDef:
     slider_config: Dict[str, Tuple[int, int]]
     default_values: List[int]
     orientation: Qt.Orientation = Qt.Orientation.Vertical
+    step_size: float = 1.0
 
 
 @dataclass
@@ -199,6 +200,7 @@ class LightingControlPanel(QWidget):
                     self._tab_layout_for(group_def), prop_name,
                     slider_config=group_def.slider_config,
                     default_values=group_def.default_values,
+                    step_size=group_def.step_size,
                 )
         pass  # outer stretch in lights tab handles spacing
 
@@ -217,8 +219,7 @@ class LightingControlPanel(QWidget):
                     prop_name: SliderGroupDef(
                         name=prop_name,
                         slider_config=_build_slider_config(prop_name, prop_data),
-                        default_values=list(prop_data["default_values"]),
-                    )
+                        default_values=list(prop_data["default_values"]),                        step_size=float(prop_data.get("step_size", 1.0)),                    )
                     for prop_name, prop_data in light_dict["light_properties"].items()
                 },
             )
@@ -253,14 +254,14 @@ class LightingControlPanel(QWidget):
             return
         for prop_name, group_def in light_def.light_properties.items():
             group_def.default_values = [
-                self._sliders[self._current_light][prop_name][lbl].value()
+                self._sliders[self._current_light][prop_name][lbl].value() * group_def.step_size
                 for lbl in group_def.slider_config
             ]
 
     def _load_light_state(self, light_def: LightDef) -> None:
         for prop_name, group_def in light_def.light_properties.items():
             for lbl, val in zip(group_def.slider_config.keys(), group_def.default_values):
-                self._sliders[light_def.name][prop_name][lbl].setValue(val)
+                self._sliders[light_def.name][prop_name][lbl].setValue(round(val / group_def.step_size))
 
     def _on_slider_changed(self, _: int) -> None:
         if self._loading:
@@ -288,7 +289,7 @@ class LightingControlPanel(QWidget):
         tab.setLayout(layout)
         return layout
 
-    def _create_slider_group(self, layout, title:str, slider_config:Dict[str,Tuple[Number, Number]], default_values:List[Number], orientation=Qt.Orientation.Horizontal) -> Dict[str, QSlider]:
+    def _create_slider_group(self, layout, title:str, slider_config:Dict[str,Tuple[Number, Number]], default_values:List[Number], orientation=Qt.Orientation.Horizontal, step_size:float=1.0) -> Dict[str, QSlider]:
         """
         Add a separator and a group of sliders to the given layout.
         Args:
@@ -330,9 +331,9 @@ class LightingControlPanel(QWidget):
                 label_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 slider = QSlider(Qt.Orientation.Horizontal)
                 min_range, max_range = slider_config[lbl]
-                slider.setMinimum(min_range)
-                slider.setMaximum(max_range)
-                slider.setValue(default_value)
+                slider.setMinimum(round(min_range / step_size))
+                slider.setMaximum(round(max_range / step_size))
+                slider.setValue(round(default_value / step_size))
                 slider.valueChanged.connect(self._on_slider_changed)
                 sliders[lbl] = slider
                 row.addWidget(label_widget)
@@ -346,9 +347,9 @@ class LightingControlPanel(QWidget):
                 slider_layout = QVBoxLayout()
                 slider = QSlider(Qt.Orientation.Vertical)
                 min_range, max_range = slider_config[lbl]
-                slider.setMinimum(min_range)
-                slider.setMaximum(max_range)
-                slider.setValue(default_value)
+                slider.setMinimum(round(min_range / step_size))
+                slider.setMaximum(round(max_range / step_size))
+                slider.setValue(round(default_value / step_size))
                 slider.valueChanged.connect(self._on_slider_changed)
                 sliders[lbl] = slider
                 slider_layout.addWidget(slider)
