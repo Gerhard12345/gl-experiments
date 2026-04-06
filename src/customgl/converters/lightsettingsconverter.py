@@ -3,6 +3,7 @@ from typing import Dict, List
 from ..drawing.lights import Lights
 from ..guielements.tabview import LightDef, SliderGroupDef
 
+import numpy as np
 
 class LightSettingsConverter:
     """

@@ -78,7 +78,7 @@ class Lights:
         specular: List[List[float]],
     ) -> None:
         self._lights = [
-            DirectionalLight(light_space_camera=Camera(eye=[p*10 for p in pos]), diffuse=diff, specular=spec)
+            DirectionalLight(light_space_camera=Camera(eye=[p * 20 for p in pos]), diffuse=diff, specular=spec)
             for pos, diff, spec in zip(positions, diffuse, specular)
         ]
 

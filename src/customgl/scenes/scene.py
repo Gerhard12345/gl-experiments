@@ -241,21 +241,21 @@ class Scene4(Scene):
             surface_df=surface_df,
             position=np.array(sphere_3d_position),
             initial_parameter=[x0, y0],
-            material=WoodenCeiling(texture_scales=[1, 1]),
+            material=GoldFoil(texture_scales=[3, 3]),
             r=r,
         )
         self.objects.append(r)
         room_definition = RoomDefinition(
             x=18,
-            y=5.5,
+            y=6.5,
             z=18,
-            bottom_material=MuddyConcrete(texture_scales=[2, 2 * 18 / 7.5]),
-            top_material=WoodenCeiling(texture_scales=[2, 2 * 18 / 7.5]),
-            left_material=WornMetal(texture_scales=[2 * 18 / 7.5, 2]),
-            right_material=WornMetal(texture_scales=[2 * 18 / 7.5, 2]),
-            front_material=WornMetal(texture_scales=[2, 2]),
-            back_material=WornMetal(texture_scales=[2, 2]),
-            position=[0, 4.5, 0],
+            bottom_material=MuddyConcrete(texture_scales=[1, 1]),
+            top_material=WoodenCeiling(texture_scales=[1, 1]),
+            left_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            right_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            front_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            back_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            position=[0, 3.5, 0],
         )
         object_views = build_room(room_definition)
         self.objects.extend(object_views)
