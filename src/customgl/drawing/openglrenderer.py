@@ -58,9 +58,15 @@ class CommonShaderData:
         shader.setInt(self.omnidirectional_shadows_texture_unit, "depthMap")
         shader.setFloat(self.omnidirectional_shadows_far, "far_plane")
         GL.glActiveTexture(GL.GL_TEXTURE0 + self.omnidirectional_shadows_texture_unit)
-        omnidirectional_shadows_framebuffer.bind_shadow_texture()
+        GL.glBindTexture(
+            omnidirectional_shadows_framebuffer.get_depth_texture_target(),
+            omnidirectional_shadows_framebuffer.get_depth_texture_id(),
+        )
         GL.glActiveTexture(GL.GL_TEXTURE0 + self.directional_shadows_texture_unit)
-        directional_shadow_framebuffer.bind_shadow_texture()
+        GL.glBindTexture(
+            directional_shadow_framebuffer.get_depth_texture_target(),
+            directional_shadow_framebuffer.get_depth_texture_id(),
+        )
 
     def prepare_omnidirectional_shader_with_transformations(self, shader: Shader, omnidirectional_shadows_framebuffer: CustomFrameBuffer):
         shader.use()
@@ -116,8 +122,7 @@ class ShadowRenderer(Renderer):
         self.shader: Shader = None
 
     def initialize(self):
-        self.framebuffer = CustomFrameBuffer(n_lights=self.n_lights)
-        self.framebuffer.addMultiDepthBuffer()
+        self.framebuffer = CustomFrameBuffer.with_multi_depth(n_layers=self.n_lights)
         shader = Shader()
         shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_lights)
         shader.compile_shader(self.shader_directory / "shadow.vert", self.shader_directory / "shadow.frag")
@@ -145,8 +150,7 @@ class PointShadowRenderer(Renderer):
         self.shader: Shader = None
 
     def initialize(self):
-        self.framebuffer = CustomFrameBuffer(n_lights=self.n_lights)
-        self.framebuffer.addCubeMapDepthBuffer()
+        self.framebuffer = CustomFrameBuffer.with_cubemap_depth(n_lights=self.n_lights)
         shader = Shader()
         shader.add_define("N_POINT_LIGHTS", self.n_lights)
         shader.compile_shader(
@@ -190,9 +194,7 @@ class RGBRenderer(Renderer):
         self.n_point_lights = n_lights[1]
 
     def initialize(self):
-        self.framebuffer = CustomFrameBuffer(n_lights=self.n_lights)
-        self.framebuffer.addColorBuffer()
-        self.framebuffer.addDepthBuffer()
+        self.framebuffer = CustomFrameBuffer.with_rgb_and_depth(n_lights=self.n_lights)
         shader = Shader()
         shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_directional_lights)
         shader.add_define("N_POINT_LIGHTS", self.n_point_lights)

@@ -13,6 +13,7 @@ from .drawing.customframebuffer import CustomFrameBuffer
 from .drawing.objectviews import VertexBuffer
 from .drawing.objectviews import SceneView
 from .drawing.shader import Shader
+from .drawing.lights import Lights
 from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera, Camera1
 from .objects.material import Material
@@ -32,6 +33,7 @@ class GLWidget(QOpenGLWidget):
         self.scene_view: SceneView = None
         self.framebuffer: CustomFrameBuffer = None
         self.lightspace_depth_framebuffer: CustomFrameBuffer = None
+        self.lights: Lights = None
         self.drawing_index = -1
         self.scene = Scene1()
         self.camera: Camera = Camera1(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
@@ -40,6 +42,21 @@ class GLWidget(QOpenGLWidget):
         self.quad_on_screen_shader: Shader = None
         self.lightspace_depth_shader: Shader = None
         self.scale_factor = scale_factor
+
+    def _create_basic_lights(self):
+        # Keep this demo independent from Scene internals: create a fixed set of
+        # directional lights for layered shadow rendering.
+        lights = Lights()
+        light_positions = [
+            [1.0, 2.0, 1.0],
+            [-1.0, 2.0, 1.0],
+            [1.0, 2.0, -1.0],
+            [-1.0, 2.0, -1.0],
+        ]
+        diffuse = [[1.0, 1.0, 1.0] for _ in light_positions]
+        specular = [[1.0, 1.0, 1.0] for _ in light_positions]
+        lights.set_directional_lights(positions=light_positions, diffuse=diffuse, specular=specular)
+        self.lights = lights
 
     def initialize_fullscreen_quad(self):
         shader = Shader()
@@ -58,16 +75,17 @@ class GLWidget(QOpenGLWidget):
         self.quad_on_screen_shader.setInt(1, "shadow_texture")
         self.quad_on_screen_shader.setInt(self.drawing_index, "shadow_component")
         GL.glActiveTexture(GL.GL_TEXTURE0)
-        GL.glBindTexture(GL.GL_TEXTURE_2D, self.framebuffer.gltexid)
+        GL.glBindTexture(GL.GL_TEXTURE_2D, self.framebuffer.get_color_texture_id())
         GL.glActiveTexture(GL.GL_TEXTURE1)
-        GL.glBindTexture(GL.GL_TEXTURE_2D_ARRAY, self.lightspace_depth_framebuffer.glrboid)
+        GL.glBindTexture(
+            self.lightspace_depth_framebuffer.get_depth_texture_target(),
+            self.lightspace_depth_framebuffer.get_depth_texture_id(),
+        )
         with self.buffer:
             GL.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, None)
 
     def initialize_rgb_stuff(self):
-        self.framebuffer = CustomFrameBuffer(n_lights=4)
-        self.framebuffer.addColorBuffer()
-        self.framebuffer.addDepthBuffer()
+        self.framebuffer = CustomFrameBuffer.with_rgb_and_depth(n_lights=4)
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
         shader.compile_shader(
@@ -78,8 +96,7 @@ class GLWidget(QOpenGLWidget):
         self._createVertexBuffer()
 
     def initialize_lightspace_depth_stuff(self):
-        self.lightspace_depth_framebuffer = CustomFrameBuffer(n_lights=4)
-        self.lightspace_depth_framebuffer.addMultiDepthBuffer()
+        self.lightspace_depth_framebuffer = CustomFrameBuffer.with_multi_depth(n_lights=4)
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
         shader.compile_shader(
@@ -91,8 +108,8 @@ class GLWidget(QOpenGLWidget):
     def draw_lightspace_depth_stuff(self):
         self.lightspace_depth_shader.use()
         self.lightspace_depth_shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width(), self.height())))
-        for i in range(self.scene.n_lights):
-            self.lightspace_depth_shader.setViewmat(self.lights.lights[i].light_space_camera.getViewmat())
+        for i, light in enumerate(self.lights.lights[: self.scene.n_lights]):
+            self.lightspace_depth_shader.setViewmat(light.light_space_camera.getViewmat())
             self.lightspace_depth_framebuffer.bind(i)
             GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
             self.scene_view.draw(self.lightspace_depth_shader)
@@ -109,6 +126,7 @@ class GLWidget(QOpenGLWidget):
         self.framebuffer.unbind()
 
     def initializeGL(self):
+        self._create_basic_lights()
         self.initialize_rgb_stuff()
         self.initialize_lightspace_depth_stuff()
         self.initialize_fullscreen_quad()

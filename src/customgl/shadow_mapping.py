@@ -106,7 +106,8 @@ class GLWidget(QOpenGLWidget):
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.defaultFramebufferObject())
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         self.quad_on_screen_renderer.render(
-            shadow_texture=self.shadow_renderer.framebuffer.glrboid, rgb_texture=self.rgb_renderer.framebuffer.gltexid
+            shadow_texture=self.shadow_renderer.framebuffer.get_depth_texture_id(),
+            rgb_texture=self.rgb_renderer.framebuffer.get_color_texture_id(),
         )
 
     def resizeGL(self, width, height):
