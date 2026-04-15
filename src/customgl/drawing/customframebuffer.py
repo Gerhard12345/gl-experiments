@@ -7,32 +7,32 @@ from .framebuffer_composition import FramebufferAttachment
 
 
 class CustomFrameBuffer(ComposedFrameBuffer):
-    def __init__(self, n_lights: int):
-        super().__init__(n_lights=n_lights)
+    def __init__(self):
+        super().__init__()
 
     @classmethod
     def with_rgb_and_depth(cls, n_lights: int):
-        framebuffer = cls(n_lights=n_lights)
+        framebuffer = cls()
         framebuffer.addColorBuffer()
         framebuffer.addDepthBuffer()
         return framebuffer
 
     @classmethod
     def with_depth_only(cls, n_lights: int):
-        framebuffer = cls(n_lights=n_lights)
+        framebuffer = cls()
         framebuffer.addDepthBuffer()
         return framebuffer
 
     @classmethod
-    def with_multi_depth(cls, n_lights: int):
-        framebuffer = cls(n_lights=n_lights)
-        framebuffer.addMultiDepthBuffer()
+    def with_multi_depth(cls, n_layers: int):
+        framebuffer = cls()
+        framebuffer.addMultiDepthBuffer(layer_count=n_layers)
         return framebuffer
 
     @classmethod
     def with_cubemap_depth(cls, n_lights: int):
-        framebuffer = cls(n_lights=n_lights)
-        framebuffer.addCubeMapDepthBuffer()
+        framebuffer = cls()
+        framebuffer.addCubeMapDepthBuffer(light_count=n_lights)
         return framebuffer
 
     def addColorBuffer(self):
@@ -41,11 +41,11 @@ class CustomFrameBuffer(ComposedFrameBuffer):
     def addDepthBuffer(self):
         self.add_attachment("depth", Depth2DAttachment())
 
-    def addCubeMapDepthBuffer(self):
-        self.add_attachment("depth", CubeMapDepthArrayAttachment(light_count=self.n_lights))
+    def addCubeMapDepthBuffer(self, light_count: int):
+        self.add_attachment("depth", CubeMapDepthArrayAttachment(light_count=light_count))
 
-    def addMultiDepthBuffer(self):
-        self.add_attachment("depth", DepthArrayAttachment(layer_count=self.n_lights))
+    def addMultiDepthBuffer(self, layer_count: int):
+        self.add_attachment("depth", DepthArrayAttachment(layer_count=layer_count))
 
 
 __all__ = [

@@ -122,7 +122,7 @@ class ShadowRenderer(Renderer):
         self.shader: Shader = None
 
     def initialize(self):
-        self.framebuffer = CustomFrameBuffer.with_multi_depth(n_lights=self.n_lights)
+        self.framebuffer = CustomFrameBuffer.with_multi_depth(n_layers=self.n_lights)
         shader = Shader()
         shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_lights)
         shader.compile_shader(self.shader_directory / "shadow.vert", self.shader_directory / "shadow.frag")
