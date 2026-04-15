@@ -28,6 +28,7 @@ from ..objects.surface import (
     MeshedSurfaceWall,
     AnalyticalDomain,
 )
+from ..drawing.lights import Lights, DirectionalLight, PointLight
 
 
 @dataclass
@@ -44,50 +45,10 @@ class RoomDefinition:
     position: List[int] = None
 
 
-@dataclass
-class DirectionalLight:
-    light_space_camera: Camera = None
-    ambient: List[float] = None
-    diffuse: List[float] = None
-    specular: List[float] = None
-
-    def __post_init__(self):
-        self.light_space_camera.lookAt()
-
-    @property
-    def direction(self):
-        return -self.light_space_camera.getViewingPosition()
-
-
-@dataclass
-class PointLight:
-    light_space_camera: List[Camera] = None
-    ambient: List[float] = None
-    diffuse: List[float] = None
-    specular: List[float] = None
-    constant: float = None
-    linear: float = None
-    quadratic: float = None
-
-    def __post_init__(self):
-        for camera in self.light_space_camera:
-            camera.lookAt()
-
-    @property
-    def position(self):
-        return self.light_space_camera[0].getViewingPosition()
-
-
 class Scene:
     def __init__(self):
         self.n_lights = 4
         self.objects: List[Object3d] = []
-        self.lights: List[DirectionalLight] = []
-        self.point_lights: List[PointLight] = []
-        self.set_lights()
-
-    def set_lights(self):
-        pass
 
     def update(self):
         for current_object in self.objects:
@@ -129,63 +90,6 @@ class Scene1(Scene):
     dangle = 0.01
     rotz = 45
     roty = 35.26
-
-    def set_lights(self):
-        unidirectional_lights_position = [[0, 3, 2], [0, 0.5, 2], [0, 3, 2], [0, 0.5, 5]]
-        lights_ambient = [[0.5, 0.5, 0.5]] * 4
-        lights_diffuse = [[0.8, 0.8, 0.8]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.09] * 4
-        lights_quadratic = [0.032] * 4
-        self.lights = [
-            DirectionalLight(
-                light_space_camera=Camera(eye=light_position), ambient=light_ambient, diffuse=light_diffuse, specular=light_specular
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                unidirectional_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]
-
-        point_lights_position = [np.array([0, 3, 2]), np.array([0, 0.5, 2]), np.array([0, 0.5, 2]), np.array([0, 3, 2])]
-        lights_ambient = [[1.0, 1.0, 1.0]] * 4
-        lights_diffuse = [[1.0, 1.0, 1.0]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.09] * 4
-        lights_quadratic = [0.032] * 4
-        self.point_lights = [
-            PointLight(
-                light_space_camera=[
-                    Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=25)
-                    for direction, up_vec in zip(
-                        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
-                        [[0, -1, 0], [0, -1, 0], [0, 0, -1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
-                    )
-                ],
-                ambient=light_ambient,
-                diffuse=light_diffuse,
-                specular=light_specular,
-                constant=light_constant,
-                linear=light_linear,
-                quadratic=light_quadratic,
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                point_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]
 
     def __init__(self):
         super().__init__()
@@ -290,62 +194,6 @@ class Scene3(Scene):
         object_views = build_room(room_definition)
         self.objects.extend(object_views)
 
-    def set_lights(self):
-        unidirectional_lights_position = [[0, 10, -14], [0, 10, -14], [0, 10, 14], [0, 10, 14]]
-        lights_ambient = [[0.5, 0.5, 0.5]] * 4
-        lights_diffuse = [[0.8, 0.8, 0.8]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.09] * 4
-        lights_quadratic = [0.032] * 4
-        self.lights = [
-            DirectionalLight(
-                light_space_camera=Camera(eye=light_position), ambient=light_ambient, diffuse=light_diffuse, specular=light_specular
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                unidirectional_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]
-        point_lights_position = [np.array([6, 10, 12]), np.array([6, 10, 12]), np.array([-6, 10, 12]), np.array([-6, 10, 12])]
-        lights_ambient = [[0.5, 0.5, 0.5]] * 4
-        lights_diffuse = [[0.8, 0.8, 0.8]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.029] * 4
-        lights_quadratic = [0.0032] * 4
-        self.point_lights = [
-            PointLight(
-                light_space_camera=[
-                    Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=25)
-                    for direction, up_vec in zip(
-                        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
-                        [[0, -1, 0], [0, -1, 0], [0, 0, -1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
-                    )
-                ],
-                ambient=light_ambient,
-                diffuse=light_diffuse,
-                specular=light_specular,
-                constant=light_constant,
-                linear=light_linear,
-                quadratic=light_quadratic,
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                point_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]
-
 
 class Scene4(Scene):
     dangle = 0.01
@@ -393,77 +241,21 @@ class Scene4(Scene):
             surface_df=surface_df,
             position=np.array(sphere_3d_position),
             initial_parameter=[x0, y0],
-            material=WoodenCeiling(texture_scales=[1, 1]),
+            material=GoldFoil(texture_scales=[3, 3]),
             r=r,
         )
         self.objects.append(r)
         room_definition = RoomDefinition(
-            x=12,
-            y=5.5,
-            z=12,
-            bottom_material=MuddyConcrete(texture_scales=[2, 2 * 12 / 5.5]),
-            top_material=WoodenCeiling(texture_scales=[2, 2 * 12 / 5.5]),
-            left_material=WornMetal(texture_scales=[2 * 12 / 5.5, 2]),
-            right_material=WornMetal(texture_scales=[2 * 12 / 5.5, 2]),
-            front_material=WornMetal(texture_scales=[2, 2]),
-            back_material=WornMetal(texture_scales=[2, 2]),
-            position=[0, 2.5, 0],
+            x=18,
+            y=6.5,
+            z=18,
+            bottom_material=MuddyConcrete(texture_scales=[1, 1]),
+            top_material=WoodenCeiling(texture_scales=[1, 1]),
+            left_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            right_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            front_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            back_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
+            position=[0, 3.5, 0],
         )
         object_views = build_room(room_definition)
         self.objects.extend(object_views)
-
-    def set_lights(self):
-        unidirectional_lights_position = [[-11, 16, -11], [-11, 16, 11], [11, 16, 11], [11, 16, -11]]
-        lights_ambient = [[0.25, 0.25, 0.25]] * 4
-        lights_diffuse = [[0.5, 0.5, 0.5]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.09] * 4
-        lights_quadratic = [0.032] * 4
-        self.lights = [
-            DirectionalLight(
-                light_space_camera=Camera(eye=light_position), ambient=light_ambient, diffuse=light_diffuse, specular=light_specular
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                unidirectional_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]
-        point_lights_position = [np.array([-11, -1, -11]), np.array([-11, -1, 11]), np.array([11, 1, -11]), np.array([11, 1, 11])]
-        lights_ambient = [[0.75, 0.75, 0.75]] * 4
-        lights_diffuse = [[1, 1, 1]] * 4
-        lights_specular = [[1, 1, 1]] * 4
-        lights_constant = [1] * 4
-        lights_linear = [0.09] * 4
-        lights_quadratic = [0.032] * 4
-        self.point_lights = [
-            PointLight(
-                light_space_camera=[
-                    Camera(eye=light_position, at=light_position + direction, up=up_vec, fov=0.5 * np.pi, near=1, far=50)
-                    for direction, up_vec in zip(
-                        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]],
-                        [[0, -1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0], [0, -1, 0]],
-                    )
-                ],
-                ambient=light_ambient,
-                diffuse=light_diffuse,
-                specular=light_specular,
-                constant=light_constant,
-                linear=light_linear,
-                quadratic=light_quadratic,
-            )
-            for light_position, light_ambient, light_diffuse, light_specular, light_constant, light_linear, light_quadratic in zip(
-                point_lights_position,
-                lights_ambient,
-                lights_diffuse,
-                lights_specular,
-                lights_constant,
-                lights_linear,
-                lights_quadratic,
-            )
-        ]

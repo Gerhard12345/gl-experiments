@@ -1,12 +1,13 @@
 import sys
+from pathlib import Path
 
 import numpy as np
 from OpenGL import GL
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QSurfaceFormat, QMouseEvent
-from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QSurfaceFormat, QMouseEvent, QPainter, QColor
+from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSlider, QTabWidget, QLabel, QSplitter, QSizePolicy, QFrame, QSplitterHandle, QPlainTextEdit, QSpacerItem
+from PyQt6.QtCore import QTimer, QRect, QSize, pyqtSlot
 from PyQt6.QtCore import Qt
 
 from .drawing.objectviews import SceneView
@@ -19,25 +20,38 @@ from .drawing.openglrenderer import (
     OpenGLCamera,
     CommonShaderData,
 )
+
 from .helper.windowsscaling import get_windows_scaling_factor
-from .objects.camera import Camera, Camera1
+from .objects.camera import Camera
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
+from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig
+from .converters.lightsettingsconverter import LightSettingsConverter
+from .drawing.lights import Lights
+from .app_config import ShadowMappingConfig
+
+_SCENE_CLASSES = {"Scene1": Scene1, "Scene3": Scene3, "Scene4": Scene4}
 
 
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
 
-    def __init__(self, parent, scale_factor: float):
+    def __init__(self, parent, scale_factor: float, light_config:LightingPanelConfig):
         QOpenGLWidget.__init__(self, parent=parent)
-        self.setMinimumSize(100, 400)
+        self.setMinimumSize(500, 200)
         self.scene: Scene = None
+        self.lights: Lights = None
+        self.lights_factory: callable = None
+        self.scene_factory: callable = None
+        self.light_config = light_config
         self.camera: Camera = None
         print("set up shadow renderer")
-        self.shadow_renderer: Renderer = ShadowRenderer(n_lights=4)
+        print(light_config.num_directional_lights)
+        print(light_config.num_point_lights)
+        self.shadow_renderer: Renderer = ShadowRenderer(n_lights=light_config.num_directional_lights)
         print("set up point shadow renderer")
-        self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=4)
+        self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=light_config.num_point_lights)
         print("set up rgb renderer")
-        self.rgb_renderer: Renderer = RGBRenderer(n_lights=4)
+        self.rgb_renderer: Renderer = RGBRenderer(n_lights=(light_config.num_directional_lights, light_config.num_point_lights))
         print("set up quad renderer")
         self.quad_on_screen_renderer = QuadRenderer()
         self.opengl_camera: OpenGLCamera = None
@@ -62,17 +76,20 @@ class GLWidget(QOpenGLWidget):
         self.create_vertex_buffer()
         print("done")
 
+    def set_lights(self, tab_defs: list):
+        self.lights = LightSettingsConverter(tab_defs).to_lights()
+
     def paintGL(self):
         GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
             shader=self.point_shadow_renderer.shader, omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer
         )
-        self.point_shadow_renderer.render(scene_view=self.scene_view)
+        self.point_shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
         self.common_shader_data.prepare_directional_shader_with_transformations(
             shader=self.shadow_renderer.shader, directional_shadows_framebuffer=self.shadow_renderer.framebuffer
         )
-        self.shadow_renderer.render(scene_view=self.scene_view)
+        self.shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
         self.opengl_camera.update_camera_matrices_in_shader(
             shader=self.rgb_renderer.shader,
             viewing_width=self.rgb_renderer.width,
@@ -83,7 +100,7 @@ class GLWidget(QOpenGLWidget):
             directional_shadow_framebuffer=self.shadow_renderer.framebuffer,
             omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer,
         )
-        self.rgb_renderer.render(scene_view=self.scene_view)
+        self.rgb_renderer.render(scene_view=self.scene_view, lights=self.lights)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, self.defaultFramebufferObject())
@@ -102,8 +119,8 @@ class GLWidget(QOpenGLWidget):
 
     def create_vertex_buffer(self):
         print("create objects")
-        self.scene = Scene4()
-        # self.scene = Scene1()
+        self.scene = self.scene_factory()
+        self.lights = self.lights_factory()
 
         print("done")
         self.camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
@@ -178,11 +195,28 @@ class GLWidget(QOpenGLWidget):
 class MyQWidget(QWidget):
     def __init__(self, parent, scale_factor):
         super().__init__(parent=parent)
+        # Read and store config
+        app_config = ShadowMappingConfig(Path(__file__).parent / "shadow_mapping.json")
+        config = LightingPanelConfig(app_config.lights_data)
+        # Main layout with splitter
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # Create horizontal splitter for left and right columns
+        splitter = CenterHighlightSplitter(Qt.Orientation.Horizontal)
+        
+        # LEFT COLUMN (Column 1)
+        left_panel = QWidget()
+        left_layout = QVBoxLayout()
+        left_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # Row 1: Scene dropdown
         combobox = QComboBox()
-        combobox.addItems(["Scene", "Shadow 1", "Shadow 2", "Shadow 3", "Shadow 4"])
+        combobox.addItems(["Scene"] + [f"Shadow {i+1}" for i in range(config.num_directional_lights)])
         combobox.activated.connect(self.activated)
-        layout = QVBoxLayout()
-        layout.addWidget(combobox)
+        left_layout.addWidget(combobox)
+        
+        # Row 2: Buttons
         button_layout = QHBoxLayout()
         button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "manual camera"]
         button_states = [True, True, True, True, False, True]
@@ -193,12 +227,61 @@ class MyQWidget(QWidget):
             button.setChecked(button_state)
             button.pressed.connect(lambda val=button_parameter: self.toggle(val))
             button_layout.addWidget(button)
-        layout.addLayout(button_layout)
-        self.gl = GLWidget(parent=self, scale_factor=scale_factor)
+        left_layout.addLayout(button_layout)
+        
+        # Row 3: GLWidget with logging widget below (horizontal splitter)
+        gl_log_splitter = CenterHighlightSplitter(Qt.Orientation.Vertical)
+        
+        self.gl = GLWidget(parent=self, scale_factor=scale_factor, light_config=config)
+        self.gl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.gl.format().setVersion(4, 2)
         self.gl.format().setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-        layout.addWidget(self.gl)
-        self.setLayout(layout)
+        
+        # Logging widget
+        self.log_widget = QPlainTextEdit()
+        self.log_widget.setReadOnly(True)
+        self.log_widget.setMinimumHeight(0)
+        
+        gl_log_splitter.addWidget(self.gl)
+        gl_log_splitter.addWidget(self.log_widget)
+        gl_log_splitter.setStretchFactor(0, 3)  # GLWidget gets more space
+        gl_log_splitter.setStretchFactor(1, 1)  # Logging gets less space
+        gl_log_splitter.setCollapsible(0, False)
+        gl_log_splitter.setCollapsible(1, False)
+        
+        left_layout.addWidget(gl_log_splitter)
+        
+        left_panel.setLayout(left_layout)
+        
+        # RIGHT COLUMN (Column 2)
+        right_panel = QWidget()
+        right_layout = QGridLayout()
+        right_layout.setContentsMargins(5, 5, 5, 5)
+
+        # Row 0: Tab widget (one tab per light + Camera Settings)
+        lighting_panel = LightingControlPanel()
+        config.lights_loaded.connect(lighting_panel.load_config)
+        config.load()
+
+        self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
+        self.gl.lights_factory = lambda: LightSettingsConverter(lighting_panel._TAB_DEFS).to_lights()
+        lighting_panel.slider_changed.connect(
+            self.gl.set_lights
+        )
+        right_layout.addWidget(lighting_panel, 0, 0)
+        right_layout.setRowStretch(0, 1)
+        right_panel.setLayout(right_layout)
+        
+        # Add panels to splitter
+        splitter.addWidget(left_panel)
+        splitter.addWidget(right_panel)
+        splitter.setStretchFactor(0, 3)  # Left column gets more space
+        splitter.setStretchFactor(1, 1)  # Right column gets less space
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        
+        main_layout.addWidget(splitter)
+        self.setLayout(main_layout)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.gl.update_scene)
