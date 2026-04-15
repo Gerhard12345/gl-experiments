@@ -22,7 +22,7 @@ from .drawing.openglrenderer import (
 )
 
 from .helper.windowsscaling import get_windows_scaling_factor
-from .objects.camera import Camera, Camera1
+from .objects.camera import Camera
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
 from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig
 from .converters.lightsettingsconverter import LightSettingsConverter
@@ -76,6 +76,9 @@ class GLWidget(QOpenGLWidget):
         self.create_vertex_buffer()
         print("done")
 
+    def set_lights(self, tab_defs: list):
+        self.lights = LightSettingsConverter(tab_defs).to_lights()
+
     def paintGL(self):
         GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
         GL.glEnable(GL.GL_DEPTH_TEST)
@@ -116,9 +119,8 @@ class GLWidget(QOpenGLWidget):
 
     def create_vertex_buffer(self):
         print("create objects")
-        self.scene = self.scene_factory() if self.scene_factory else Scene4()
-        self.lights = self.lights_factory() if self.lights_factory else self.scene.set_lights()
-        # self.scene = Scene1()
+        self.scene = self.scene_factory()
+        self.lights = self.lights_factory()
 
         print("done")
         self.camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
@@ -264,10 +266,7 @@ class MyQWidget(QWidget):
         self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
         self.gl.lights_factory = lambda: LightSettingsConverter(lighting_panel._TAB_DEFS).to_lights()
         lighting_panel.slider_changed.connect(
-            lambda tab_defs: setattr(
-                self.gl, 'lights',
-                LightSettingsConverter(tab_defs).to_lights(),
-            ) if self.gl.scene is not None else None
+            self.gl.set_lights
         )
         right_layout.addWidget(lighting_panel, 0, 0)
         right_layout.setRowStretch(0, 1)
