@@ -17,11 +17,11 @@ class VertexBuffer:
         self.a_textureuv = 2
         self.a_tangent = 3
         self.a_bitangent = 4
-        self.VAO: int = None
+        self.vao: int = None
 
     def upload_data_to_gpu(self, vertices: NDArray[np.float32], indices: NDArray[np.uint32]):
-        self.VAO = GL.glGenVertexArrays(1)
-        GL.glBindVertexArray(self.VAO)
+        self.vao = GL.glGenVertexArrays(1)
+        GL.glBindVertexArray(self.vao)
         vbo = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo)
         GL.glBufferData(GL.GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL.GL_STATIC_DRAW)
@@ -34,7 +34,7 @@ class VertexBuffer:
         GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
 
     def __enter__(self):
-        GL.glBindVertexArray(self.VAO)
+        GL.glBindVertexArray(self.vao)
 
     def __exit__(self, exc_type, exc_value, traceback):
         GL.glBindVertexArray(0)
@@ -83,5 +83,5 @@ class SceneView:
     def draw(self, shader: Shader, cull_face=False):
         for current_object in self.viewable_objects:
             modelmat = current_object.baseobject.modelmat
-            shader.setModelmat(modelmat.astype(np.float32))
+            shader.set_modelmat(modelmat.astype(np.float32))
             current_object.draw(cull_face=cull_face)

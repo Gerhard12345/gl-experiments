@@ -8,16 +8,11 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QGridLayout,
     QTabWidget,
     QSlider,
     QLabel,
-    QPushButton,
     QFrame,
-    QPlainTextEdit,
     QSplitter,
-    QSpacerItem,
-    QSizePolicy,
     QSplitterHandle,
     QComboBox,
 )
@@ -216,7 +211,6 @@ class LightingControlPanel(QWidget):
                     default_values=group_def.default_values,
                     step_size=group_def.step_size,
                 )
-        pass  # outer stretch in lights tab handles spacing
 
     @pyqtSlot(list)
     def load_config(self, data: List[dict]) -> None:

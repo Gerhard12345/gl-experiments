@@ -2,7 +2,7 @@ from pathlib import Path
 from imageio import imread
 import numpy as np
 from numpy.typing import NDArray
-import OpenGL.GL as GL
+from OpenGL import GL
 from ..objects.material import Material
 
 
@@ -90,7 +90,7 @@ class GLMaterial:
         self.specularpower = material.specularpower
         self.texturescales = material.texture_scales
 
-    def setMaterial(self):
+    def set_material(self):
         program = GL.glGetIntegerv(GL.GL_CURRENT_PROGRAM)
         u_specularpower = GL.glGetUniformLocation(program, bytes("u_material.specular_power", "utf-8"))
         GL.glUniform1f(u_specularpower, self.specularpower)
@@ -107,7 +107,7 @@ class GLMaterial:
 
     def __enter__(self):
         self.texture.bind()
-        self.setMaterial()
+        self.set_material()
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.texture.unbind()

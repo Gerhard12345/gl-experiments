@@ -58,37 +58,37 @@ class Shader:
     def use(self):
         GL.glUseProgram(self.program)
 
-    def setViewmat(self, viewMatrix):
-        self.setMatrix4fv([viewMatrix], "u_view_mat")
+    def set_viewmat(self, view_matrix):
+        self.set_matrix_4fv([view_matrix], "u_view_mat")
 
-    def setCameraPosition(self, cameraPosition):
-        self.setVec3fv([cameraPosition], "u_viewing_position")
+    def set_camera_position(self, camera_position):
+        self.set_vec_3fv([camera_position], "u_viewing_position")
 
-    def setLightPositions(self, positions):
-        self.setVec3fv(positions, "u_light_position")
+    def set_light_positions(self, positions):
+        self.set_vec_3fv(positions, "u_light_position")
 
-    def setVec3fv(self, vecs: List[NDArray[np.float32]], uniform_name):
+    def set_vec_3fv(self, vecs: List[NDArray[np.float32]], uniform_name):
         u_viewing_pos = GL.glGetUniformLocation(self.program, bytes(uniform_name, "utf-8"))
         GL.glUniform3fv(u_viewing_pos, len(vecs), np.array(vecs).astype(np.float32).flatten().tobytes())
 
-    def setModelmat(self, modelmat: NDArray[np.float32]):
-        self.setMatrix4fv([modelmat], "u_model_mat")
+    def set_modelmat(self, modelmat: NDArray[np.float32]):
+        self.set_matrix_4fv([modelmat], "u_model_mat")
 
-    def setProjectionmat(self, projectionmat: NDArray[np.float32]):
-        self.setMatrix4fv([projectionmat], "u_projection_mat")
+    def set_projection_mat(self, projectionmat: NDArray[np.float32]):
+        self.set_matrix_4fv([projectionmat], "u_projection_mat")
 
-    def setMatrix4f(self, matrix4f: NDArray[np.float32], uniform_name: str):
-        self.setMatrix4fv([matrix4f], uniform_name)
+    def set_matrix_4f(self, matrix4f: NDArray[np.float32], uniform_name: str):
+        self.set_matrix_4fv([matrix4f], uniform_name)
 
-    def setMatrix4fv(self, matrix4f: List[NDArray[np.float32]], uniform_name: str):
+    def set_matrix_4fv(self, matrix4f: List[NDArray[np.float32]], uniform_name: str):
         size = len(matrix4f)
         u_mat = GL.glGetUniformLocation(self.program, bytes(uniform_name, "utf-8"))
         GL.glUniformMatrix4fv(u_mat, size, False, np.concatenate(matrix4f).flatten().tobytes())
 
-    def setInt(self, value: int, uniform_name: str):
+    def set_int(self, value: int, uniform_name: str):
         u_int = GL.glGetUniformLocation(self.program, bytes(uniform_name, "utf-8"))
         GL.glUniform1i(u_int, value)
 
-    def setFloat(self, value: float, uniform_name: str):
+    def set_float(self, value: float, uniform_name: str):
         u_float = GL.glGetUniformLocation(self.program, bytes(uniform_name, "utf-8"))
         GL.glUniform1f(u_float, value)

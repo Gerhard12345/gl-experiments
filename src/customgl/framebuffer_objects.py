@@ -75,9 +75,9 @@ class GLWidget(QOpenGLWidget):
     def draw_texture_to_fullscreen_quad(self):
         """Render the framebuffer content onto a fullscreen quad."""
         self.quad_on_screen_shader.use()
-        self.quad_on_screen_shader.setInt(0, "scene_texture")
-        self.quad_on_screen_shader.setInt(1, "shadow_texture")
-        self.quad_on_screen_shader.setInt(self.drawing_index, "shadow_component")
+        self.quad_on_screen_shader.set_int(0, "scene_texture")
+        self.quad_on_screen_shader.set_int(1, "shadow_texture")
+        self.quad_on_screen_shader.set_int(self.drawing_index, "shadow_component")
         GL.glActiveTexture(GL.GL_TEXTURE0)
         GL.glBindTexture(GL.GL_TEXTURE_2D, self.framebuffer.get_color_texture_id())
         GL.glActiveTexture(GL.GL_TEXTURE1)
@@ -114,9 +114,9 @@ class GLWidget(QOpenGLWidget):
     def draw_lightspace_depth_stuff(self):
         """Render the scene into the shadow depth framebuffer."""
         self.lightspace_depth_shader.use()
-        self.lightspace_depth_shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width(), self.height())))
+        self.lightspace_depth_shader.set_projection_mat(getOrthogonalProjectionMatrix((self.width(), self.height())))
         for i, light in enumerate(self.lights.lights[: self.scene.n_lights]):
-            self.lightspace_depth_shader.setViewmat(light.light_space_camera.getViewmat())
+            self.lightspace_depth_shader.set_viewmat(light.light_space_camera.getViewmat())
             self.lightspace_depth_framebuffer.bind(i)
             GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
             self.scene_view.draw(self.lightspace_depth_shader)
@@ -125,9 +125,9 @@ class GLWidget(QOpenGLWidget):
         """Render the main RGB scene pass."""
         self.shader.use()
         self.camera.lookAt()
-        self.shader.setViewmat(self.camera.getViewmat())
-        self.shader.setCameraPosition(self.camera.getViewingPosition())
-        self.shader.setProjectionmat(getCentralProjectionMatrix((self.width(), self.height()), znear=0.1, zfar=100, fov=self.camera.fov))
+        self.shader.set_viewmat(self.camera.getViewmat())
+        self.shader.set_camera_position(self.camera.getViewingPosition())
+        self.shader.set_projection_mat(getCentralProjectionMatrix((self.width(), self.height()), znear=0.1, zfar=100, fov=self.camera.fov))
         self.framebuffer.bind(0)
         GL.glClear(GL.GL_DEPTH_BUFFER_BIT | GL.GL_COLOR_BUFFER_BIT)
         self.scene_view.draw(self.shader)

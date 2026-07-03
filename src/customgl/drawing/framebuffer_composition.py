@@ -185,21 +185,21 @@ class ComposedFrameBuffer:
         self._attachments: Dict[str, FramebufferAttachment] = {}
 
     @property
-    def hasColorBuffer(self) -> bool:
+    def has_color_buffer(self) -> bool:
         return "color" in self._attachments
 
     @property
-    def hasDepthBuffer(self) -> bool:
+    def has_depth_buffer(self) -> bool:
         depth_attachment = self._attachments.get("depth")
         return isinstance(depth_attachment, Depth2DAttachment)
 
     @property
-    def hasMultiDepthBuffer(self) -> bool:
+    def has_multi_depth_buffer(self) -> bool:
         depth_attachment = self._attachments.get("depth")
         return isinstance(depth_attachment, DepthArrayAttachment)
 
     @property
-    def hasCubeMapDepthBuffer(self) -> bool:
+    def has_cubemap_depth_buffer(self) -> bool:
         depth_attachment = self._attachments.get("depth")
         return isinstance(depth_attachment, CubeMapDepthArrayAttachment)
 
@@ -223,7 +223,7 @@ class ComposedFrameBuffer:
         GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
     def _set_draw_read_buffers(self):
-        if self.hasColorBuffer:
+        if self.has_color_buffer:
             GL.glDrawBuffer(GL.GL_COLOR_ATTACHMENT0)
             GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0)
         else:
@@ -267,18 +267,18 @@ class ComposedFrameBuffer:
         color_attachment = self._attachments.get("color")
         return color_attachment.texture_id if color_attachment else None
 
-    def colorToBuffer(self):
-        if not self.hasColorBuffer:
-            raise RuntimeError("colorToBuffer requires a color attachment")
+    def color_to_buffer(self):
+        if not self.has_color_buffer:
+            raise RuntimeError("color_to_buffer requires a color attachment")
         self.bind()
         pixels = GL.glReadPixels(0, 0, self.width, self.height, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE)
         self.unbind()
         return pixels
 
-    def depthToBuffer(self):
+    def depth_to_buffer(self):
         depth_attachment = self._attachments.get("depth")
         if depth_attachment is None:
-            raise RuntimeError("depthToBuffer requires a depth attachment")
+            raise RuntimeError("depth_to_buffer requires a depth attachment")
         if isinstance(depth_attachment, DepthArrayAttachment):
             return_value = []
             for i in range(depth_attachment.layer_count):

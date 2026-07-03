@@ -11,40 +11,40 @@ class CustomFrameBuffer(ComposedFrameBuffer):
         super().__init__()
 
     @classmethod
-    def with_rgb_and_depth(cls, n_lights: int):
+    def with_rgb_and_depth(cls):
         framebuffer = cls()
-        framebuffer.addColorBuffer()
-        framebuffer.addDepthBuffer()
+        framebuffer.add_color_buffer()
+        framebuffer.add_depth_buffer()
         return framebuffer
 
     @classmethod
-    def with_depth_only(cls, n_lights: int):
+    def with_depth_only(cls):
         framebuffer = cls()
-        framebuffer.addDepthBuffer()
+        framebuffer.add_depth_buffer()
         return framebuffer
 
     @classmethod
     def with_multi_depth(cls, n_layers: int):
         framebuffer = cls()
-        framebuffer.addMultiDepthBuffer(layer_count=n_layers)
+        framebuffer.add_multi_depth_buffer(layer_count=n_layers)
         return framebuffer
 
     @classmethod
     def with_cubemap_depth(cls, n_lights: int):
         framebuffer = cls()
-        framebuffer.addCubeMapDepthBuffer(light_count=n_lights)
+        framebuffer.add_cubemap_depth_buffer(light_count=n_lights)
         return framebuffer
 
-    def addColorBuffer(self):
+    def add_color_buffer(self):
         self.add_attachment("color", Color2DAttachment())
 
-    def addDepthBuffer(self):
+    def add_depth_buffer(self):
         self.add_attachment("depth", Depth2DAttachment())
 
-    def addCubeMapDepthBuffer(self, light_count: int):
+    def add_cubemap_depth_buffer(self, light_count: int):
         self.add_attachment("depth", CubeMapDepthArrayAttachment(light_count=light_count))
 
-    def addMultiDepthBuffer(self, layer_count: int):
+    def add_multi_depth_buffer(self, layer_count: int):
         self.add_attachment("depth", DepthArrayAttachment(layer_count=layer_count))
 
 
