@@ -108,7 +108,5 @@ class Lights:
                 linear=lin,
                 quadratic=quad,
             )
-            for pos, diff, spec, const, lin, quad in zip(
-                positions, diffuse, specular, constant, linear, quadratic
-            )
+            for pos, diff, spec, const, lin, quad in zip(positions, diffuse, specular, constant, linear, quadratic)
         ]

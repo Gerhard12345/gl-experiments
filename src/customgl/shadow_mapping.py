@@ -9,9 +9,19 @@ from OpenGL import GL
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QMouseEvent, QSurfaceFormat
-from PyQt6.QtWidgets import QApplication, QComboBox, QGridLayout, QHBoxLayout, QMainWindow, QPushButton, QSizePolicy, QVBoxLayout, QWidget, QPlainTextEdit
-from PyQt6.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QGridLayout,
+    QHBoxLayout,
+    QMainWindow,
+    QPlainTextEdit,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+from PyQt6.QtCore import QObject, QThread, Qt, QTimer, pyqtSignal, pyqtSlot
 
 from .drawing.objectviews import SceneView
 from .drawing.openglrenderer import (
@@ -48,6 +58,7 @@ class QTextEditLogHandler(logging.Handler):
         self.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%H:%M:%S"))
 
     def emit(self, record):
+        """Append a formatted log record to the text widget."""
         msg = self.format(record)
         QTimer.singleShot(0, lambda: self.widget.appendPlainText(msg))
 
@@ -65,6 +76,7 @@ class ScenePreparationWorker(QObject):
 
     @pyqtSlot()
     def run(self):
+        """Prepare the scene and emit the result to the main thread."""
         try:
             scene = self.scene_factory()
             lights = self.lights_factory()
@@ -78,7 +90,7 @@ class ScenePreparationWorker(QObject):
 class GLWidget(QOpenGLWidget):
     """OpenGL widget for rendering the shadow-mapping scene."""
 
-    def __init__(self, parent, scale_factor: float, light_config:LightingPanelConfig):
+    def __init__(self, parent, scale_factor: float, light_config: LightingPanelConfig):
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(500, 200)
         self.setMouseTracking(True)
@@ -119,6 +131,7 @@ class GLWidget(QOpenGLWidget):
         self.prepare_scene_in_background()
 
     def set_lights(self, tab_defs: list):
+        """Apply the light definitions to the current widget state."""
         self.lights = LightSettingsConverter(tab_defs).to_lights()
 
     def prepare_scene_in_background(self):
@@ -144,6 +157,7 @@ class GLWidget(QOpenGLWidget):
 
     @pyqtSlot(object, object, object)
     def on_scene_prepared(self, scene, lights, camera):
+        """Store the prepared scene and create the vertex buffer."""
         self.scene = scene
         self.lights = lights
         self.camera = camera
@@ -152,9 +166,11 @@ class GLWidget(QOpenGLWidget):
 
     @pyqtSlot(str)
     def on_scene_preparation_failed(self, message):
+        """Log a scene-preparation failure."""
         logger.error("scene preparation failed: %s", message)
 
     def paintGL(self):
+        """Render the current frame when the scene is initialized."""
         if not self.is_initalized:
             return
         GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
@@ -269,18 +285,21 @@ class GLWidget(QOpenGLWidget):
             elif event.buttons() == Qt.MouseButton.LeftButton:
                 self.camera.rotate_phi(diff[0])
                 self.camera.rotate_theta(-diff[1])
-            
+
         self.last_position = event.position()
 
     def update_scene(self):
+        """Advance the scene when updates are enabled."""
         if self.do_update:
             self.scene.update()
 
     def update_camera(self):
+        """Update the camera when manual navigation is disabled."""
         if not self.manual_camera:
             self.camera.update()
 
     def redraw(self):
+        """Request a repaint."""
         self.repaint()
 
 
@@ -295,34 +314,38 @@ class MyQWidget(QWidget):
         # Main layout with splitter
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(5, 5, 5, 5)
-        
+
         # Create horizontal splitter for left and right columns
         splitter = CenterHighlightSplitter(Qt.Orientation.Horizontal)
-        
+
         # LEFT COLUMN (Column 1)
         left_panel = QWidget()
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(5, 5, 5, 5)
-        
+
         # Row 1: Scene dropdown
         combobox = QComboBox()
-        combobox.addItems(["Scene"] + [f"Shadow {i+1}" for i in range(config.num_directional_lights)])
+        combobox.addItems(["Scene"] + [f"Shadow {i + 1}" for i in range(config.num_directional_lights)])
         combobox.activated.connect(self.activated)
         left_layout.addWidget(combobox)
-        
+
         # Row 2: Buttons
         button_layout = QHBoxLayout()
         button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "manual camera"]
         button_states = [True, True, True, True, False, True]
         button_parameters = [0, 1, 2, 3, -1, -2]
-        for button_text, button_parameter, button_state in zip(button_texts, button_parameters, button_states):
+        for button_text, button_parameter, button_state in zip(
+            button_texts,
+            button_parameters,
+            button_states,
+        ):
             button = QPushButton(button_text)
             button.setCheckable(True)
             button.setChecked(button_state)
             button.pressed.connect(lambda val=button_parameter: self.toggle(val))
             button_layout.addWidget(button)
         left_layout.addLayout(button_layout)
-        
+
         # Row 3: GLWidget with logging widget below (horizontal splitter)
         gl_log_splitter = CenterHighlightSplitter(Qt.Orientation.Vertical)
 
@@ -344,11 +367,11 @@ class MyQWidget(QWidget):
         gl_log_splitter.setStretchFactor(1, 1)  # Logging gets less space
         gl_log_splitter.setCollapsible(0, False)
         gl_log_splitter.setCollapsible(1, False)
-        
+
         left_layout.addWidget(gl_log_splitter)
-        
+
         left_panel.setLayout(left_layout)
-        
+
         # RIGHT COLUMN (Column 2)
         right_panel = QWidget()
         right_layout = QGridLayout()
@@ -361,13 +384,11 @@ class MyQWidget(QWidget):
 
         self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
         self.gl.lights_factory = lambda: LightSettingsConverter(lighting_panel._TAB_DEFS).to_lights()
-        lighting_panel.slider_changed.connect(
-            self.gl.set_lights
-        )
+        lighting_panel.slider_changed.connect(self.gl.set_lights)
         right_layout.addWidget(lighting_panel, 0, 0)
         right_layout.setRowStretch(0, 1)
         right_panel.setLayout(right_layout)
-        
+
         # Add panels to splitter
         splitter.addWidget(left_panel)
         splitter.addWidget(right_panel)
@@ -375,7 +396,7 @@ class MyQWidget(QWidget):
         splitter.setStretchFactor(1, 1)  # Right column gets less space
         splitter.setCollapsible(0, False)
         splitter.setCollapsible(1, False)
-        
+
         main_layout.addWidget(splitter)
         self.setLayout(main_layout)
 
@@ -386,6 +407,7 @@ class MyQWidget(QWidget):
         self.timer.start(5)
 
     def toggle(self, value: int):
+        """Toggle the selected rendering/material feature for the scene objects."""
         for myobject in self.gl.scene_view.viewable_objects:
             if value == 0:
                 myobject.material.texture.toggle_detailed_diffuse_maps()
@@ -401,6 +423,7 @@ class MyQWidget(QWidget):
             self.gl.manual_camera = not self.gl.manual_camera
 
     def activated(self, index):
+        """Handle the combo-box selection for the shadow layer."""
         self.gl.set_drawing_index(index - 1)
 
 

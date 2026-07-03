@@ -5,6 +5,7 @@ from ..guielements.tabview import LightDef, SliderGroupDef
 
 import numpy as np
 
+
 class LightSettingsConverter:
     """
     Converts a List[LightDef] (from LightingControlPanel._TAB_DEFS) into a
@@ -27,7 +28,7 @@ class LightSettingsConverter:
 
         ambient_lights = [l for l in self._tab_defs if l.type == "Ambient"]
         dir_lights = [l for l in self._tab_defs if l.type == "Directional"]
-        pt_lights  = [l for l in self._tab_defs if l.type == "Point"]
+        pt_lights = [l for l in self._tab_defs if l.type == "Point"]
 
         if ambient_lights:
             color = self._normalize_rgb(self._group_values(ambient_lights[0].light_properties["Color"]))
@@ -36,19 +37,19 @@ class LightSettingsConverter:
         if dir_lights:
             lights.set_directional_lights(
                 positions=[list(self._group_values(l.light_properties["Direction"]).values()) for l in dir_lights],
-                diffuse  =[self._normalize_rgb(self._group_values(l.light_properties["Diffuse"])) for l in dir_lights],
-                specular =[self._normalize_rgb(self._group_values(l.light_properties["Specular"])) for l in dir_lights],
+                diffuse=[self._normalize_rgb(self._group_values(l.light_properties["Diffuse"])) for l in dir_lights],
+                specular=[self._normalize_rgb(self._group_values(l.light_properties["Specular"])) for l in dir_lights],
             )
 
         if pt_lights:
             n = len(pt_lights)
             lights.set_point_lights(
                 positions=[list(self._group_values(l.light_properties["Position"]).values()) for l in pt_lights],
-                diffuse  =[self._normalize_rgb(self._group_values(l.light_properties["Diffuse"])) for l in pt_lights],
-                specular =[self._normalize_rgb(self._group_values(l.light_properties["Specular"])) for l in pt_lights],
-                constant =[1.0]  * n,
-                linear   =[0.09 * 0.025] * n,
-                quadratic=[0.032 * 0.025]* n,
+                diffuse=[self._normalize_rgb(self._group_values(l.light_properties["Diffuse"])) for l in pt_lights],
+                specular=[self._normalize_rgb(self._group_values(l.light_properties["Specular"])) for l in pt_lights],
+                constant=[1.0] * n,
+                linear=[0.09 * 0.025] * n,
+                quadratic=[0.032 * 0.025] * n,
             )
 
         return lights

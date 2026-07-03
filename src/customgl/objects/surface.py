@@ -9,7 +9,6 @@ from numpy.typing import NDArray
 from .objects3d import Object3d
 from .material import Material
 
-
 AnalyticalDomain = namedtuple("AnalyticalDomain", ["fx", "fy", "Jf", "range_u", "range_v"])
 
 

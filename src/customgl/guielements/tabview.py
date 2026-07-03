@@ -5,9 +5,21 @@ from typing import Dict, Tuple, List, Union
 from numbers import Number
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QTabWidget, QSlider,
-    QLabel, QPushButton, QFrame, QPlainTextEdit, QSplitter, QSpacerItem,
-    QSizePolicy, QSplitterHandle, QComboBox
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QTabWidget,
+    QSlider,
+    QLabel,
+    QPushButton,
+    QFrame,
+    QPlainTextEdit,
+    QSplitter,
+    QSpacerItem,
+    QSizePolicy,
+    QSplitterHandle,
+    QComboBox,
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSlot
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -54,7 +66,7 @@ def _build_slider_config(prop_name: str, prop_data: dict) -> Dict[str, Tuple[int
 
 class CenterHighlightSplitterHandle(QSplitterHandle):
     """Custom splitter handle that highlights only in the center third."""
-    
+
     def __init__(self, orientation, parent=None):
         super().__init__(orientation, parent)
         self.setMouseTracking(True)
@@ -62,12 +74,12 @@ class CenterHighlightSplitterHandle(QSplitterHandle):
             self.setCursor(Qt.CursorShape.SplitHCursor)
         else:
             self.setCursor(Qt.CursorShape.SplitVCursor)
-    
+
     def paintEvent(self, event):
         painter = QPainter(self)
         rect = self.rect()
         painter.fillRect(rect, self.palette().color(QPalette.ColorRole.Window))
-        
+
         if self.orientation() == Qt.Orientation.Horizontal:
             # Highlight center third vertically
             center_y = rect.height() / 2
@@ -80,13 +92,13 @@ class CenterHighlightSplitterHandle(QSplitterHandle):
             third_width = rect.width() / 6  # One third on each side of center
             highlight_rect = rect.adjusted(int(center_x - third_width), 0, int(-(rect.width() - center_x - third_width)), 0)
             painter.fillRect(highlight_rect, QColor("#cccccc"))
-    
+
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-    
+
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-    
+
     def sizeHint(self):
         if self.orientation() == Qt.Orientation.Horizontal:
             return QSize(5, 100)
@@ -96,7 +108,7 @@ class CenterHighlightSplitterHandle(QSplitterHandle):
 
 class CenterHighlightSplitter(QSplitter):
     """Custom splitter with highlighted center-only handles."""
-    
+
     def createHandle(self):
         return CenterHighlightSplitterHandle(self.orientation(), self)
 
@@ -156,7 +168,8 @@ class LightingControlPanel(QWidget):
         tab = QWidget()
         tab_layout = self._add_layout_to_tab(tab)
         self._camera_sliders[self._CAMERA_GROUP.name] = self._create_slider_group(
-            tab_layout, self._CAMERA_GROUP.name,
+            tab_layout,
+            self._CAMERA_GROUP.name,
             slider_config=self._CAMERA_GROUP.slider_config,
             default_values=self._CAMERA_GROUP.default_values,
         )
@@ -197,7 +210,8 @@ class LightingControlPanel(QWidget):
         for prop_name, group_def in light_def.light_properties.items():
             if prop_name not in self._sliders[light_def.name]:
                 self._sliders[light_def.name][prop_name] = self._create_slider_group(
-                    self._tab_layout_for(group_def), prop_name,
+                    self._tab_layout_for(group_def),
+                    prop_name,
                     slider_config=group_def.slider_config,
                     default_values=group_def.default_values,
                     step_size=group_def.step_size,
@@ -219,7 +233,9 @@ class LightingControlPanel(QWidget):
                     prop_name: SliderGroupDef(
                         name=prop_name,
                         slider_config=_build_slider_config(prop_name, prop_data),
-                        default_values=list(prop_data["default_values"]),                        step_size=float(prop_data.get("step_size", 1.0)),                    )
+                        default_values=list(prop_data["default_values"]),
+                        step_size=float(prop_data.get("step_size", 1.0)),
+                    )
                     for prop_name, prop_data in light_dict["light_properties"].items()
                 },
             )
@@ -254,8 +270,7 @@ class LightingControlPanel(QWidget):
             return
         for prop_name, group_def in light_def.light_properties.items():
             group_def.default_values = [
-                self._sliders[self._current_light][prop_name][lbl].value() * group_def.step_size
-                for lbl in group_def.slider_config
+                self._sliders[self._current_light][prop_name][lbl].value() * group_def.step_size for lbl in group_def.slider_config
             ]
 
     def _load_light_state(self, light_def: LightDef) -> None:
@@ -272,10 +287,7 @@ class LightingControlPanel(QWidget):
     @property
     def camera_config(self) -> CameraConfig:
         return CameraConfig(
-            field_of_view={
-                lbl: self._camera_sliders[self._CAMERA_GROUP.name][lbl].value()
-                for lbl in self._CAMERA_GROUP.slider_config
-            }
+            field_of_view={lbl: self._camera_sliders[self._CAMERA_GROUP.name][lbl].value() for lbl in self._CAMERA_GROUP.slider_config}
         )
 
     def set_camera_config(self, config: CameraConfig) -> None:
@@ -289,7 +301,15 @@ class LightingControlPanel(QWidget):
         tab.setLayout(layout)
         return layout
 
-    def _create_slider_group(self, layout, title:str, slider_config:Dict[str,Tuple[Number, Number]], default_values:List[Number], orientation=Qt.Orientation.Horizontal, step_size:float=1.0) -> Dict[str, QSlider]:
+    def _create_slider_group(
+        self,
+        layout,
+        title: str,
+        slider_config: Dict[str, Tuple[Number, Number]],
+        default_values: List[Number],
+        orientation=Qt.Orientation.Horizontal,
+        step_size: float = 1.0,
+    ) -> Dict[str, QSlider]:
         """
         Add a separator and a group of sliders to the given layout.
         Args:

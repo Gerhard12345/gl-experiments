@@ -187,6 +187,7 @@ class MyQWidget(QWidget):
         self.setLayout(layout)
 
     def activated(self, index):
+        """Handle the scene-selection combo-box change."""
         self.gl.set_drawing_index(index - 1)
 
 

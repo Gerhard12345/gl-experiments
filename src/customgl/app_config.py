@@ -17,5 +17,9 @@ class ShadowMappingConfig:
         with open(lights_path, encoding="utf-8") as handle:
             self.lights_data: list = json.load(handle)
 
+    def get_scene_name(self) -> str:
+        """Return the configured scene name."""
+        return self.scene_name
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(scene_name={self.scene_name!r})"

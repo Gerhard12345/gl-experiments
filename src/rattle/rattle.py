@@ -59,9 +59,10 @@ mu  = [2 / h * g_q(q_next) * (1/m*(p_) - 0.5 * h *  m*g)] / || g_q(q_next) ||**2
 
 import time
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Callable, Tuple
 
-import matplotlib.colors as colors
+from matplotlib import colors
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
@@ -104,9 +105,6 @@ class Graph(Surface):
     def dq(self, q: Tuple[np.float64, np.float64]) -> Tuple[np.float64, np.float64]:
         """Evaluate the derivate with respect to q"""
         return self.f_q(q)
-
-
-from dataclasses import dataclass
 
 
 @dataclass
