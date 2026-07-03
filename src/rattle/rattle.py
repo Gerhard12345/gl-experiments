@@ -55,14 +55,17 @@ mu  = [2 / h * g_q(q_next) * (1/m*(p_) - 0.5 * h *  m*g)] / || g_q(q_next) ||**2
 
 """
 
+"""Rattle integrator for constrained Hamiltonian systems."""
+
 import time
-import numpy as np
-from typing import Tuple
-from typing import Callable
-from numpy.typing import NDArray
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 from abc import abstractmethod
+from typing import Callable, Tuple
+
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy.typing import NDArray
+
 from customgl.objects.surface import AnalyticalDomain
 
 
@@ -246,6 +249,10 @@ class Rattle:
         return lambda_new
 
     def step(self):
+        pnew = self.p
+        qnew = self.q
+        lambda_new = 0.0
+        mu_new = 0.0
         if self.state == "rolling":
             pnew, qnew, lambda_new, mu_new = self.constraint_step()
             if lambda_new <= -0.1e1:

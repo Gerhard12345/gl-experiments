@@ -1,13 +1,14 @@
-from pathlib import Path
+"""Minimal framebuffer demo using Qt and OpenGL."""
+
 import sys
+from pathlib import Path
 
 import numpy as np
 from OpenGL import GL
 
-from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat
-from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout
-
+from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+from PyQt6.QtWidgets import QApplication, QComboBox, QMainWindow, QVBoxLayout, QWidget
 
 from .drawing.customframebuffer import CustomFrameBuffer
 from .drawing.objectviews import VertexBuffer
@@ -23,8 +24,8 @@ from .objects.transformations import getOrthogonalProjectionMatrix, getCentralPr
 from .scenes.scene import Scene1
 
 
-# implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
+    """Simple OpenGL widget demonstrating framebuffer-based rendering."""
 
     def __init__(self, parent, scale_factor: float):
         self.parent = parent
@@ -44,6 +45,7 @@ class GLWidget(QOpenGLWidget):
         self.scale_factor = scale_factor
 
     def _create_basic_lights(self):
+        """Create a fixed set of directional lights for the demo."""
         # Keep this demo independent from Scene internals: create a fixed set of
         # directional lights for layered shadow rendering.
         lights = Lights()
@@ -59,6 +61,7 @@ class GLWidget(QOpenGLWidget):
         self.lights = lights
 
     def initialize_fullscreen_quad(self):
+        """Create the fullscreen quad shader and buffer."""
         shader = Shader()
         shader.compile_shader(
             Path(__file__).parent.parent / "customgl/drawing/shaders/simple.vert",
@@ -70,6 +73,7 @@ class GLWidget(QOpenGLWidget):
         self.buffer.upload_data_to_gpu(vertices=q.get_vertices(), indices=q.get_indices())
 
     def draw_texture_to_fullscreen_quad(self):
+        """Render the framebuffer content onto a fullscreen quad."""
         self.quad_on_screen_shader.use()
         self.quad_on_screen_shader.setInt(0, "scene_texture")
         self.quad_on_screen_shader.setInt(1, "shadow_texture")
@@ -85,6 +89,7 @@ class GLWidget(QOpenGLWidget):
             GL.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, None)
 
     def initialize_rgb_stuff(self):
+        """Initialize the RGB framebuffer and its shader."""
         self.framebuffer = CustomFrameBuffer.with_rgb_and_depth(n_lights=4)
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
@@ -93,10 +98,11 @@ class GLWidget(QOpenGLWidget):
             Path(__file__).parent.parent / "customgl/drawing/shaders/simple_with_perspective.frag",
         )
         self.shader = shader
-        self._createVertexBuffer()
+        self._create_vertex_buffer()
 
     def initialize_lightspace_depth_stuff(self):
-        self.lightspace_depth_framebuffer = CustomFrameBuffer.with_multi_depth(n_lights=4)
+        """Initialize the shadow depth framebuffer."""
+        self.lightspace_depth_framebuffer = CustomFrameBuffer.with_multi_depth(n_layers=4)
         shader = Shader()
         shader.add_define("N_LIGHTS", 4)
         shader.compile_shader(
@@ -106,6 +112,7 @@ class GLWidget(QOpenGLWidget):
         self.lightspace_depth_shader = shader
 
     def draw_lightspace_depth_stuff(self):
+        """Render the scene into the shadow depth framebuffer."""
         self.lightspace_depth_shader.use()
         self.lightspace_depth_shader.setProjectionmat(getOrthogonalProjectionMatrix((self.width(), self.height())))
         for i, light in enumerate(self.lights.lights[: self.scene.n_lights]):
@@ -115,6 +122,7 @@ class GLWidget(QOpenGLWidget):
             self.scene_view.draw(self.lightspace_depth_shader)
 
     def draw_rgb_stuff(self):
+        """Render the main RGB scene pass."""
         self.shader.use()
         self.camera.lookAt()
         self.shader.setViewmat(self.camera.getViewmat())
@@ -126,12 +134,14 @@ class GLWidget(QOpenGLWidget):
         self.framebuffer.unbind()
 
     def initializeGL(self):
+        """Initialize the widget and its render passes."""
         self._create_basic_lights()
         self.initialize_rgb_stuff()
         self.initialize_lightspace_depth_stuff()
         self.initialize_fullscreen_quad()
 
     def paintGL(self):
+        """Render the current frame."""
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.draw_rgb_stuff()
         self.draw_lightspace_depth_stuff()
@@ -142,6 +152,7 @@ class GLWidget(QOpenGLWidget):
         self.draw_texture_to_fullscreen_quad()
 
     def resizeGL(self, width, height):
+        """Resize the viewport and framebuffers."""
         print(width, height)
         w = int(width * self.scale_factor)
         h = int(height * self.scale_factor)
@@ -149,7 +160,8 @@ class GLWidget(QOpenGLWidget):
         self.framebuffer.resize((w, h))
         self.lightspace_depth_framebuffer.resize((w, h))
 
-    def _createVertexBuffer(self):
+    def _create_vertex_buffer(self):
+        """Create the scene view used for rendering."""
         self.scene_view = SceneView(self.scene)
 
     def set_drawing_index(self, index: int):
@@ -158,6 +170,8 @@ class GLWidget(QOpenGLWidget):
 
 
 class MyQWidget(QWidget):
+    """Container widget for the framebuffer demo."""
+
     def __init__(self, parent, scale_factor: float):
         super().__init__(parent=parent)
 
@@ -178,6 +192,8 @@ class MyQWidget(QWidget):
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
+    """Application main window for the framebuffer demo."""
+
     def __init__(self, scale_factor: float):
         super().__init__()
 
@@ -187,6 +203,7 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    """Run the framebuffer demo."""
     scale_factor = get_windows_scaling_factor()
     app = QApplication(sys.argv)
     window = MainWindow(scale_factor)

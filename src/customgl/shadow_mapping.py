@@ -1,3 +1,5 @@
+"""Shadow mapping demo with Qt and OpenGL."""
+
 import logging
 import sys
 from pathlib import Path
@@ -6,9 +8,9 @@ import numpy as np
 from OpenGL import GL
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QSurfaceFormat, QMouseEvent, QPainter, QColor
-from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSlider, QTabWidget, QLabel, QSplitter, QSizePolicy, QFrame, QSplitterHandle, QPlainTextEdit, QSpacerItem
-from PyQt6.QtCore import QObject, QThread, QTimer, QRect, QSize, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QMouseEvent, QSurfaceFormat
+from PyQt6.QtWidgets import QApplication, QComboBox, QGridLayout, QHBoxLayout, QMainWindow, QPushButton, QSizePolicy, QVBoxLayout, QWidget, QPlainTextEdit
+from PyQt6.QtCore import QObject, QThread, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtCore import Qt
 
 from .drawing.objectviews import SceneView
@@ -38,6 +40,8 @@ logger.propagate = False
 
 
 class QTextEditLogHandler(logging.Handler):
+    """A logging handler that appends records to a Qt text widget."""
+
     def __init__(self, widget: QPlainTextEdit):
         super().__init__()
         self.widget = widget
@@ -49,6 +53,8 @@ class QTextEditLogHandler(logging.Handler):
 
 
 class ScenePreparationWorker(QObject):
+    """Worker object that prepares scene data off the UI thread."""
+
     finished = pyqtSignal(object, object, object)
     failed = pyqtSignal(str)
 
@@ -70,6 +76,8 @@ class ScenePreparationWorker(QObject):
 
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
+    """OpenGL widget for rendering the shadow-mapping scene."""
+
     def __init__(self, parent, scale_factor: float, light_config:LightingPanelConfig):
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(500, 200)
@@ -99,6 +107,7 @@ class GLWidget(QOpenGLWidget):
         self._scene_worker = None
 
     def initializeGL(self):
+        """Initialize the renderers and begin scene preparation."""
         self.shadow_renderer = ShadowRenderer(n_lights=self.light_config.num_directional_lights)
         self.point_shadow_renderer = PointShadowRenderer(n_lights=self.light_config.num_point_lights)
         self.rgb_renderer = RGBRenderer(n_lights=(self.light_config.num_directional_lights, self.light_config.num_point_lights))
@@ -113,14 +122,15 @@ class GLWidget(QOpenGLWidget):
         self.lights = LightSettingsConverter(tab_defs).to_lights()
 
     def prepare_scene_in_background(self):
+        """Prepare the scene data in a background thread."""
         scene = self.scene_factory()
         lights = self.lights_factory()
-        camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])        
+        camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
         self.scene = scene
         self.lights = lights
         self.camera = camera
         logger.info("Scene prepared, creating vertex buffer")
-        
+
         self._scene_thread = QThread(self)
         self._scene_worker = ScenePreparationWorker(self.scene_factory, self.lights_factory)
         self._scene_worker.moveToThread(self._scene_thread)
@@ -275,6 +285,8 @@ class GLWidget(QOpenGLWidget):
 
 
 class MyQWidget(QWidget):
+    """Main widget containing the OpenGL view and controls."""
+
     def __init__(self, parent, scale_factor):
         super().__init__(parent=parent)
         # Read and store config
@@ -393,6 +405,8 @@ class MyQWidget(QWidget):
 
 
 class MainWindow(QMainWindow):
+    """Main window for the shadow mapping demo."""
+
     def __init__(self, scale_factor):
         super().__init__()
         self.setWindowTitle("Custom GL app")
@@ -401,6 +415,7 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    """Launch the shadow mapping demo."""
     scale_factor = get_windows_scaling_factor()
     app = QApplication(sys.argv)
     window = MainWindow(scale_factor)

@@ -1,27 +1,21 @@
+"""Configuration helpers for the shadow mapping demo."""
+
 import json
 from pathlib import Path
 
 
 class ShadowMappingConfig:
-    """
-    Loads shadow_mapping.json and the nested light configuration it references.
-
-    shadow_mapping.json shape::
-
-        {
-            "Scene": "Scene4",
-            "light_configuration": "guielements/scene4_lights.json"
-        }
-
-    The ``light_configuration`` path is resolved relative to the config file.
-    """
+    """Load and expose the shadow mapping configuration from JSON files."""
 
     def __init__(self, json_path: Path):
-        with open(json_path) as f:
-            data = json.load(f)
+        with open(json_path, encoding="utf-8") as handle:
+            data = json.load(handle)
 
         self.scene_name: str = data["Scene"]
 
         lights_path = json_path.parent / data["light_configuration"]
-        with open(lights_path) as f:
-            self.lights_data: list = json.load(f)
+        with open(lights_path, encoding="utf-8") as handle:
+            self.lights_data: list = json.load(handle)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(scene_name={self.scene_name!r})"
