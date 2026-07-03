@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from OpenGL import GL
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QSurfaceFormat, QMouseEvent, QPainter, QColor
 from PyQt6.QtWidgets import QApplication, QMainWindow, QComboBox, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout, QSlider, QTabWidget, QLabel, QSplitter, QSizePolicy, QFrame, QSplitterHandle, QPlainTextEdit, QSpacerItem
-from PyQt6.QtCore import QTimer, QRect, QSize, pyqtSlot
+from PyQt6.QtCore import QObject, QThread, QTimer, QRect, QSize, pyqtSignal, pyqtSlot
 from PyQt6.QtCore import Qt
 
 from .drawing.objectviews import SceneView
@@ -31,55 +32,121 @@ from .app_config import ShadowMappingConfig
 
 _SCENE_CLASSES = {"Scene1": Scene1, "Scene3": Scene3, "Scene4": Scene4}
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
+
+class QTextEditLogHandler(logging.Handler):
+    def __init__(self, widget: QPlainTextEdit):
+        super().__init__()
+        self.widget = widget
+        self.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%H:%M:%S"))
+
+    def emit(self, record):
+        msg = self.format(record)
+        QTimer.singleShot(0, lambda: self.widget.appendPlainText(msg))
+
+
+class ScenePreparationWorker(QObject):
+    finished = pyqtSignal(object, object, object)
+    failed = pyqtSignal(str)
+
+    def __init__(self, scene_factory, lights_factory):
+        super().__init__()
+        self.scene_factory = scene_factory
+        self.lights_factory = lights_factory
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            scene = self.scene_factory()
+            lights = self.lights_factory()
+            camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
+            self.finished.emit(scene, lights, camera)
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
 
 # implementing a custom openGl widget
 class GLWidget(QOpenGLWidget):
-
     def __init__(self, parent, scale_factor: float, light_config:LightingPanelConfig):
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(500, 200)
+        self.setMouseTracking(True)
         self.scene: Scene = None
         self.lights: Lights = None
         self.lights_factory: callable = None
         self.scene_factory: callable = None
         self.light_config = light_config
         self.camera: Camera = None
-        print("set up shadow renderer")
-        print(light_config.num_directional_lights)
-        print(light_config.num_point_lights)
-        self.shadow_renderer: Renderer = ShadowRenderer(n_lights=light_config.num_directional_lights)
-        print("set up point shadow renderer")
-        self.point_shadow_renderer: Renderer = PointShadowRenderer(n_lights=light_config.num_point_lights)
-        print("set up rgb renderer")
-        self.rgb_renderer: Renderer = RGBRenderer(n_lights=(light_config.num_directional_lights, light_config.num_point_lights))
-        print("set up quad renderer")
+        logger.info("Using directional lights: %d", light_config.num_directional_lights)
+        logger.info("Using point lights: %d", light_config.num_point_lights)
+        self.shadow_renderer: Renderer
+        self.point_shadow_renderer: Renderer
+        self.rgb_renderer: Renderer
         self.quad_on_screen_renderer = QuadRenderer()
         self.opengl_camera: OpenGLCamera = None
         self.scene_view: SceneView = None
         self.last_position = None
         self.manual_camera = True
         self.do_update = False
-        print("set up common shader data")
+        logger.info("set up common shader data")
         self.common_shader_data: CommonShaderData = CommonShaderData()
         self.scale_factor = scale_factor
+        self.is_initalized = False
+        self._scene_thread: QThread | None = None
+        self._scene_worker = None
 
     def initializeGL(self):
-        print("initialize shadow renderer")
+        self.shadow_renderer = ShadowRenderer(n_lights=self.light_config.num_directional_lights)
+        self.point_shadow_renderer = PointShadowRenderer(n_lights=self.light_config.num_point_lights)
+        self.rgb_renderer = RGBRenderer(n_lights=(self.light_config.num_directional_lights, self.light_config.num_point_lights))
+
         self.shadow_renderer.initialize()
-        print("initialize rgb renderer")
         self.rgb_renderer.initialize()
-        print("initialize point shadow renderer")
         self.point_shadow_renderer.initialize()
-        print("initialize quad renderer")
         self.quad_on_screen_renderer.initialize()
-        print("create buffers")
-        self.create_vertex_buffer()
-        print("done")
+        self.prepare_scene_in_background()
 
     def set_lights(self, tab_defs: list):
         self.lights = LightSettingsConverter(tab_defs).to_lights()
 
+    def prepare_scene_in_background(self):
+        scene = self.scene_factory()
+        lights = self.lights_factory()
+        camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])        
+        self.scene = scene
+        self.lights = lights
+        self.camera = camera
+        logger.info("Scene prepared, creating vertex buffer")
+        
+        self._scene_thread = QThread(self)
+        self._scene_worker = ScenePreparationWorker(self.scene_factory, self.lights_factory)
+        self._scene_worker.moveToThread(self._scene_thread)
+        self._scene_thread.started.connect(self._scene_worker.run)
+        self._scene_worker.finished.connect(self.on_scene_prepared)
+        self._scene_worker.failed.connect(self.on_scene_preparation_failed)
+        self._scene_worker.finished.connect(self._scene_thread.quit)
+        self._scene_thread.finished.connect(self._scene_worker.deleteLater)
+        self._scene_thread.finished.connect(self._scene_thread.deleteLater)
+        self._scene_thread.start()
+
+    @pyqtSlot(object, object, object)
+    def on_scene_prepared(self, scene, lights, camera):
+        self.scene = scene
+        self.lights = lights
+        self.camera = camera
+        logger.info("Scene prepared, creating vertex buffer")
+        self.create_vertex_buffer()
+
+    @pyqtSlot(str)
+    def on_scene_preparation_failed(self, message):
+        logger.error("scene preparation failed: %s", message)
+
     def paintGL(self):
+        if not self.is_initalized:
+            return
         GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
         GL.glEnable(GL.GL_DEPTH_TEST)
         self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
@@ -119,47 +186,58 @@ class GLWidget(QOpenGLWidget):
         self.quad_on_screen_renderer.set_size(width=w, height=h)
 
     def create_vertex_buffer(self):
-        print("create objects")
-        self.scene = self.scene_factory()
-        self.lights = self.lights_factory()
-
-        print("done")
-        self.camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
-        # self.camera = Camera1(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
-        print("actually creating buffer")
-        self.scene_view = SceneView(scene=self.scene)
-        print("done")
-        self.opengl_camera = OpenGLCamera(self.camera)
+        logger.info("actually creating buffer")
+        if not self.isValid():
+            logger.error("create_vertex_buffer called without a valid OpenGL context")
+            return
+        self.makeCurrent()
+        try:
+            self.scene_view = SceneView(scene=self.scene)
+            logger.info("scene view created")
+            self.opengl_camera = OpenGLCamera(self.camera)
+            self.is_initalized = True
+        finally:
+            self.doneCurrent()
+        self.update()
 
     def set_drawing_index(self, index: int):
         self.quad_on_screen_renderer.set_drawing_index(index)
         self.repaint()
 
     def unproject(self, window_x: int, window_y: int):
-        self.rgb_renderer.framebuffer.bind()
-        render_width, render_height = self.rgb_renderer.framebuffer.width, self.rgb_renderer.framebuffer.height
-        window_x = int(window_x * self.scale_factor)
-        window_y = render_height - int(window_y * self.scale_factor)
-        window_z = GL.glReadPixels(window_x, window_y, 1, 1, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT)
-        window_x = window_x / render_width * 2 - 1
-        window_y = window_y / render_height * 2 - 1
-        window_z = window_z[0, 0] * 2 - 1
-        window_coords = np.matrix([[window_x], [window_y], [window_z], [1]])
-        viewmat = self.camera.getViewmat().T
-        projectionmat = self.camera.getProjectionmat(viewing_width=render_width, viewing_height=render_height).T
-        outmat = projectionmat * viewmat
-        outmat = outmat ** (-1)
-        res = np.array(outmat * window_coords)
-        print(res[:, 0] / res[3, 0])
-        self.camera.set_lookat_position(res[:, 0] / res[3, 0])
+        if not self.is_initalized:
+            return np.array([0, 0, 0, 1])
+        if not self.isValid():
+            return np.array([0, 0, 0, 1])
+        self.makeCurrent()
+        try:
+            self.rgb_renderer.framebuffer.bind()
+            render_width, render_height = self.rgb_renderer.framebuffer.width, self.rgb_renderer.framebuffer.height
+            window_x = int(window_x * self.scale_factor)
+            window_y = render_height - int(window_y * self.scale_factor)
+            window_z = GL.glReadPixels(window_x, window_y, 1, 1, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT)
+            window_x = window_x / render_width * 2 - 1
+            window_y = window_y / render_height * 2 - 1
+            window_z = window_z[0, 0] * 2 - 1
+            window_coords = np.matrix([[window_x], [window_y], [window_z], [1]])
+            viewmat = self.camera.getViewmat().T
+            projectionmat = self.camera.getProjectionmat(viewing_width=render_width, viewing_height=render_height).T
+            outmat = projectionmat * viewmat
+            outmat = outmat ** (-1)
+            res = np.array(outmat * window_coords)
+            physical_position = res[:, 0] / res[3, 0]
+            return physical_position
+        finally:
+            self.doneCurrent()
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
-        if not self.manual_camera:
+        if not self.manual_camera or not self.is_initalized:
             return
-        self.unproject(event.pos().x(), event.pos().y())
+        physical_position = self.unproject(event.pos().x(), event.pos().y())
+        self.camera.set_lookat_position(physical_position)
 
     def wheelEvent(self, event):
-        if not self.manual_camera:
+        if not self.manual_camera or not self.is_initalized:
             return
         scaling = 1 + (-event.angleDelta().y() // 120) * 0.25
         self.camera.zoom(scaling)
@@ -170,8 +248,10 @@ class GLWidget(QOpenGLWidget):
         self.last_position = None
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        if not self.manual_camera:
+        if not self.manual_camera or not self.is_initalized:
             return
+        physical_position = self.unproject(event.pos().x(), event.pos().y())
+        logger.debug("Hover coordinates: %s", np.asarray(physical_position).flatten().tolist())
         if self.last_position:
             diff = [event.position().x() - self.last_position.x(), event.position().y() - self.last_position.y()]
             if event.buttons() == Qt.MouseButton.RightButton:
@@ -179,6 +259,7 @@ class GLWidget(QOpenGLWidget):
             elif event.buttons() == Qt.MouseButton.LeftButton:
                 self.camera.rotate_phi(diff[0])
                 self.camera.rotate_theta(-diff[1])
+            
         self.last_position = event.position()
 
     def update_scene(self):
@@ -232,17 +313,19 @@ class MyQWidget(QWidget):
         
         # Row 3: GLWidget with logging widget below (horizontal splitter)
         gl_log_splitter = CenterHighlightSplitter(Qt.Orientation.Vertical)
-        
+
+        # Logging widget and handler are created before the GL widget so early logs are captured
+        self.log_widget = QPlainTextEdit()
+        self.log_widget.setReadOnly(True)
+        self.log_widget.setMinimumHeight(0)
+        self.log_handler = QTextEditLogHandler(self.log_widget)
+        logger.addHandler(self.log_handler)
+
         self.gl = GLWidget(parent=self, scale_factor=scale_factor, light_config=config)
         self.gl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.gl.format().setVersion(4, 2)
         self.gl.format().setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
-        
-        # Logging widget
-        self.log_widget = QPlainTextEdit()
-        self.log_widget.setReadOnly(True)
-        self.log_widget.setMinimumHeight(0)
-        
+
         gl_log_splitter.addWidget(self.gl)
         gl_log_splitter.addWidget(self.log_widget)
         gl_log_splitter.setStretchFactor(0, 3)  # GLWidget gets more space
