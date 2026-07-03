@@ -12,7 +12,7 @@ from .rattle import (
 class RollingSphereOnSurface:
     def __init__(self, surface_f, surface_df, position=np.array([0, 0, 0])):
         self.q_old = position
-        self.dq:NDArray
+        self.dq: NDArray
         hamiltonian = Hamiltonian(
             m=1.0,
             algebraic_condition=AlgebraicCondition(Graph(surface_f, surface_df)),
@@ -57,7 +57,7 @@ class RollingSphereOnParametricSurface:
         position=np.array([0, 0, 0]),
     ):
         self.q_old = position
-        self.dq:NDArray
+        self.dq: NDArray
         hamiltonian = Hamiltonian(
             m=1.0,
             algebraic_condition=AlgebraicCondition(ParametricSurface(analytical_domain, parameter_manager, surface_f, surface_df)),
