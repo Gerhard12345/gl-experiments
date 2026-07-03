@@ -69,3 +69,10 @@ good-names = ["initializeGL",
               "mouseReleaseEvent",
               "mouseMoveEvent"
 ]
+
+[tool.pylint.messages_control]
+disable = ["missing-function-docstring", 
+           "missing-class-docstring", 
+            "missing-module-docstring",
+            "no-name-in-module",
+]

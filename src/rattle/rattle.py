@@ -55,8 +55,6 @@ mu  = [2 / h * g_q(q_next) * (1/m*(p_) - 0.5 * h *  m*g)] / || g_q(q_next) ||**2
 
 """
 
-"""Rattle integrator for constrained Hamiltonian systems."""
-
 import time
 from abc import abstractmethod
 from dataclasses import dataclass

@@ -79,6 +79,10 @@ class MyQWidget(QWidget):
         """Return the embedded OpenGL widget."""
         return self.gl
 
+    def set_gl_widget(self, gl_widget: GLWidget) -> None:
+        """Replace the embedded OpenGL widget."""
+        self.gl = gl_widget
+
 
 # Subclass QMainWindow to customize your application's main window
 class MainWindow(QMainWindow):
@@ -94,6 +98,10 @@ class MainWindow(QMainWindow):
     def get_container_widget(self) -> MyQWidget:
         """Return the main container widget."""
         return self.centralWidget()
+
+    def set_container_widget(self, widget: MyQWidget) -> None:
+        """Replace the central widget."""
+        self.setCentralWidget(widget)
 
 
 def main():

@@ -71,6 +71,10 @@ class ScenePreparationWorker(QObject):
 
     def __init__(self, scene_factory, lights_factory):
         super().__init__()
+        self.configure(scene_factory, lights_factory)
+
+    def configure(self, scene_factory, lights_factory):
+        """Store the factories used to prepare the scene state."""
         self.scene_factory = scene_factory
         self.lights_factory = lights_factory
 
