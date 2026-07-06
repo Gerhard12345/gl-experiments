@@ -37,7 +37,7 @@ from .drawing.openglrenderer import (
 from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera
 from .scenes.scene import Scene, Scene1, Scene3, Scene4
-from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig
+from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig, CameraConfig
 from .converters.lightsettingsconverter import LightSettingsConverter
 from .drawing.lights import Lights
 from .app_config import ShadowMappingConfig
@@ -94,6 +94,8 @@ class ScenePreparationWorker(QObject):
 class GLWidget(QOpenGLWidget):
     """OpenGL widget for rendering the shadow-mapping scene."""
 
+    camera_ready = pyqtSignal(object)
+
     def __init__(self, parent, scale_factor: float, light_config: LightingPanelConfig):
         QOpenGLWidget.__init__(self, parent=parent)
         self.setMinimumSize(500, 200)
@@ -121,6 +123,7 @@ class GLWidget(QOpenGLWidget):
         self.is_initalized = False
         self._scene_thread: QThread | None = None
         self._scene_worker = None
+        # signal `camera_ready` is declared at class scope
 
     def initializeGL(self):
         """Initialize the renderers and begin scene preparation."""
@@ -167,6 +170,12 @@ class GLWidget(QOpenGLWidget):
         self.camera = camera
         logger.info("Scene prepared, creating vertex buffer")
         self.create_vertex_buffer()
+        try:
+            # emit camera ready so UI can initialize sliders
+            self.camera_ready.emit(self.camera)
+        except Exception:
+            # ignore if no listener is attached or signal wasn't bound normally
+            pass
 
     @pyqtSlot(str)
     def on_scene_preparation_failed(self, message):
@@ -228,6 +237,28 @@ class GLWidget(QOpenGLWidget):
             self.is_initalized = True
         finally:
             self.doneCurrent()
+        self.update()
+
+    def set_camera_from_gui(self, camera_config: CameraConfig):
+        """Apply camera settings from the GUI CameraConfig.
+
+        The GUI exposes FOV in degrees; the internal camera expects a "fov"
+        value that is passed to getCentralProjectionMatrix as tan(angle/2).
+        """
+        try:
+            deg = camera_config.field_of_view.get("FOV")
+        except Exception:
+            return
+        if deg is None:
+            return
+        try:
+            angle_rad = np.deg2rad(float(deg))
+            fov_value = np.tan(angle_rad * 0.5)
+        except Exception:
+            return
+        if self.camera is not None:
+            self.camera.fov = fov_value
+        # opengl_camera uses the same Camera instance, so no extra sync needed
         self.update()
 
     def set_drawing_index(self, index: int):
@@ -389,6 +420,39 @@ class MyQWidget(QWidget):
         self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
         self.gl.lights_factory = lambda: LightSettingsConverter(lighting_panel._TAB_DEFS).to_lights()
         lighting_panel.slider_changed.connect(self.gl.set_lights)
+        # update camera FOV whenever the camera sliders change
+        lighting_panel.slider_changed.connect(lambda _tab_defs: self.gl.set_camera_from_gui(lighting_panel.camera_config))
+        # when the GLWidget has prepared its scene and camera, initialize the GUI with the camera FOV
+        def _on_gl_camera_ready(camera_obj):
+            try:
+                # interpret camera_obj.fov as either tan(angle/2) or raw radians
+                fov_val = float(getattr(camera_obj, "fov", 0.0))
+            except Exception:
+                return
+            # compute candidate angles
+            try:
+                angle_from_tan = 2 * np.rad2deg(np.arctan(fov_val))
+            except Exception:
+                angle_from_tan = None
+            try:
+                angle_from_rad = np.rad2deg(fov_val)
+            except Exception:
+                angle_from_rad = None
+            # choose the plausible angle between 1 and 179 degrees
+            chosen = None
+            for a in (angle_from_rad, angle_from_tan):
+                if a is None:
+                    continue
+                if 1.0 <= a <= 179.0:
+                    chosen = a
+                    break
+            if chosen is None:
+                # fallback to angle_from_tan if available
+                chosen = angle_from_tan if angle_from_tan is not None else (angle_from_rad if angle_from_rad is not None else 60.0)
+            val = int(round(chosen))
+            lighting_panel.set_camera_config(CameraConfig(field_of_view={"FOV": val}))
+
+        self.gl.camera_ready.connect(_on_gl_camera_ready)
         right_layout.addWidget(lighting_panel, 0, 0)
         right_layout.setRowStretch(0, 1)
         right_panel.setLayout(right_layout)
