@@ -48,7 +48,13 @@ framebuffer_objects = "customgl.framebuffer_objects:main"
 first_opengl_quad = "customgl.first_opengl_quad:main"
 
 [tool.setuptools.package-data]
-customgl = ["textures/**/*.png", "textures/**/*.jpg", "drawing/shaders/*.vert", "drawing/shaders/*.geom", "drawing/shaders/*.frag"]
+customgl = ["textures/**/*.png",
+            "textures/**/*.jpg",
+            "drawing/shaders/*.vert",
+            "drawing/shaders/*.geom",
+            "drawing/shaders/*.frag",
+            "*.json",
+            "guielements/*.json]
 
 [tool.pytest.ini_options]
 testpaths =  ["tests"]
