@@ -12,7 +12,7 @@ from surfaces.surface_base import Surface
 class RollingSphereOnSurface:
     def __init__(
         self,
-        surface:Surface,
+        surface: Surface,
         position=np.array([0, 0, 0]),
     ):
         self.q_old = position

@@ -10,6 +10,7 @@ from .objects3d import Object3d
 from .material import Material
 from surfaces.surface_base import AnalyticalDomain, Surface, ParameterManager
 
+
 class Mesh(Object3d):
     """
     The mesh class represents a flat linear triangulation

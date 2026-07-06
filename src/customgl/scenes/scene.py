@@ -26,7 +26,7 @@ from ..objects.surface import (
     MeshedSurfaceWithNormalOffset,
     MeshedSurfaceWall,
 )
-from surfaces.surface_base import AnalyticalDomain, ParametricSurface, ParameterManager 
+from surfaces.surface_base import AnalyticalDomain, ParametricSurface, ParameterManager
 
 
 @dataclass
@@ -114,7 +114,6 @@ class Scene1(Scene):
             MetalPanel1(),
         ] * 2
         for position, material in zip(positions, materials):
-
             c = Cube(position=position, scale=np.array([1, 1, 1]), material=material)
             c.local_rot_z(np.radians(self.rotz)).local_rot_x(np.radians(self.roty))
             c.add_dynamic(Transformations.localrotationmat_axis(c.position, self.dangle, np.array([0, 1.0, 0])))
@@ -219,7 +218,7 @@ class Scene4(Scene):
         z = surface_f([x0, y0])
         r = 0.5
         parameter_manager = ParameterManager(uv=[x0, y0])
-        p = ParametricSurface(circular_analytical_domain, surface_f, surface_df)        
+        p = ParametricSurface(circular_analytical_domain, surface_f, surface_df)
         s3 = MeshedSurfaceWithNormalOffset(
             parametric_surface=p,
             h_u=0.0125,

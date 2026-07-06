@@ -68,8 +68,6 @@ from numpy.typing import NDArray
 from surfaces.surface_base import AnalyticalDomain, Surface
 
 
-
-
 class AlgebraicCondition:
     """
     Represents an algebraic condition
@@ -84,7 +82,7 @@ class AlgebraicCondition:
         return q[2] - self.surface(q[0:2])
 
     def dq(self, q: NDArray[np.float64]):
-        """Evaluate the derivate with respect to q"""        
+        """Evaluate the derivate with respect to q"""
         return -np.array([*self.surface.dq(q[0:2]), -1])
 
 
@@ -318,6 +316,7 @@ if __name__ == "__main__":
                 + gaussiandq(q, mean_v4, 0.5 * w)
                 + 0.35 * atandq(0.35 * np.array(q))
             )
+
     a = AnalyticalDomain(
         lambda u, v: u * np.cos(v),
         lambda u, v: u * np.sin(v),

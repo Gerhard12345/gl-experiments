@@ -48,6 +48,7 @@ class Graph(Surface):
 class ParameterManager:
     uv: Tuple[np.float64, np.float64]
     q_old: Tuple[np.float64, np.float64] = None
+
     def _compute_parameters_from_xyposition(self, q: Tuple[np.float64, np.float64], parametric_domain: AnalyticalDomain):
         if all(q == self.q_old):
             self.q_old = q

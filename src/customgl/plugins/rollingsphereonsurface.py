@@ -8,7 +8,7 @@ from surfaces.surface_base import Surface, ParameterManager, ParametricSurface
 class RollingSphereOnSurface(SphericalCoordianteSphere):
     def __init__(
         self,
-        surface:Surface,
+        surface: Surface,
         position=np.array([0, 0, 0]),
         material=Material(),
         r=1.0,
@@ -17,7 +17,7 @@ class RollingSphereOnSurface(SphericalCoordianteSphere):
         if type(surface) is ParametricSurface:
             p0 = position[0]
             p1 = position[1]
-            
+
             position[0] = surface.parametric_domain.fx(p0, p1)
             position[1] = surface.parametric_domain.fy(p0, p1)
             pm = ParameterManager(uv=[p0, p1], q_old=position[0:2])

@@ -54,7 +54,7 @@ customgl = ["textures/**/*.png",
             "drawing/shaders/*.geom",
             "drawing/shaders/*.frag",
             "*.json",
-            "guielements/*.json]
+            "guielements/*.json"]
 
 [tool.pytest.ini_options]
 testpaths =  ["tests"]

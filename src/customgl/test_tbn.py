@@ -23,7 +23,6 @@ from scipy import ndimage
 
 
 def smooth_gaussian(im: np.ndarray, sigma) -> np.ndarray:
-
     if sigma == 0:
         return im
 
