@@ -26,7 +26,7 @@ from ..objects.surface import (
     MeshedSurfaceWithNormalOffset,
     MeshedSurfaceWall,
 )
-from surfaces.surface_base import AnalyticalDomain, ParametricSurface, ParameterManager
+from surfaces.surface_base import AnalyticalDomain, ParametricSurface, ParameterManager, Graph
 
 
 @dataclass
@@ -155,22 +155,20 @@ class Scene3(Scene):
         b = AnalyticalDomain(lambda u, v: u, lambda u, v: v, lambda u, v: np.matrix([[1, 0], [0, 1]]), bounds[0], bounds[1])
         z = surface_f([x0, y0])
         r = 0.5
+        p = Graph(b, surface_f, surface_df)
         s3 = MeshedSurfaceWithNormalOffset(
-            analytical_domain=b,
-            f_z=lambda u, v: surface_f([u, v]),
-            d_f=lambda u, v: surface_df([u, v]),
+            surface=p,
             h_u=0.0125,
             h_v=0.025,
             position=np.array([0, 0, 0]),
             material=WoodenCeiling(texture_scales=[22 / 6, 1]),
             # material=WoodenCeiling(texture_scales=[22 / 6, 1]),
-            r=r,
+            offset=r,
         )
 
         self.objects.append(s3)
-        r = RollingSphere(
-            surface_f=surface_f,
-            surface_df=surface_df,
+        r = RollingSphereOnSurface(
+            p,
             position=np.array([x0, y0, z]),
             material=WoodenCeiling(texture_scales=[2, 2]),
             r=r,
@@ -217,10 +215,9 @@ class Scene4(Scene):
         )
         z = surface_f([x0, y0])
         r = 0.5
-        parameter_manager = ParameterManager(uv=[x0, y0])
         p = ParametricSurface(circular_analytical_domain, surface_f, surface_df)
         s3 = MeshedSurfaceWithNormalOffset(
-            parametric_surface=p,
+            surface=p,
             h_u=0.0125,
             h_v=0.0125,
             position=np.array([0, 0, 0]),

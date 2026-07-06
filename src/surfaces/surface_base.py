@@ -30,9 +30,11 @@ class Graph(Surface):
 
     def __init__(
         self,
+        analytical_domain: AnalyticalDomain,
         f: Callable[[Tuple[np.float64, np.float64]], np.float64],  # The arguments are assumed to be Cartesian coordinates
         f_q: Callable[[Tuple[np.float64, np.float64]], Tuple[np.float64, np.float64]],  # The arguments are assumed to be Cartesian coordinates
     ):
+        self.parametric_domain = analytical_domain
         self.f = f
         self.f_q = f_q
 

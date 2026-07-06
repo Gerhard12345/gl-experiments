@@ -173,9 +173,9 @@ class MeshedSurfaceWithNormalOffset(MeshedSurface):
     The Surface class extends the mesh class by a z component
     """
 
-    def __init__(self, parametric_surface: Surface, h_u, h_v, position, material, offset):
+    def __init__(self, surface: Surface, h_u, h_v, position, material, offset):
         self.offset = offset
-        super().__init__(parametric_surface, h_u, h_v, position, material)
+        super().__init__(surface, h_u, h_v, position, material)
 
     def value(self, uv):
         n = super().normal(uv)
