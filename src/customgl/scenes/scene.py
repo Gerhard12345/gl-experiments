@@ -6,7 +6,6 @@ import numpy as np
 from ..objects.objects3d import Cube
 from ..objects.objects3d import Quad
 from ..objects.objects3d import Object3d
-from ..objects.camera import Camera
 from ..objects.material import (
     Material,
     WoodenCeiling,
@@ -22,13 +21,12 @@ from ..objects.material import (
     WornMetal,
 )
 from ..objects.transformations import Transformations
-from ..objects.rolling_sphere import RollingSphere, RollingSphereParametric
+from ..plugins.rollingsphereonsurface import RollingSphereOnSurface
 from ..objects.surface import (
     MeshedSurfaceWithNormalOffset,
     MeshedSurfaceWall,
-    AnalyticalDomain,
 )
-from ..drawing.lights import Lights, DirectionalLight, PointLight
+from surfaces.surface_base import AnalyticalDomain, ParametricSurface, ParameterManager 
 
 
 @dataclass
@@ -212,7 +210,7 @@ class Scene4(Scene):
         bounds = [[6, 10], [0, 2 * np.pi]]
         x0 = 9
         y0 = 2 * np.pi - 0.4
-        b = AnalyticalDomain(
+        circular_analytical_domain = AnalyticalDomain(
             lambda u, v: u * np.cos(v),
             lambda u, v: u * np.sin(v),
             lambda u, v: np.matrix([[np.cos(v), np.sin(v)], [-u * np.sin(v), u * np.cos(v)]]),
@@ -220,27 +218,23 @@ class Scene4(Scene):
         )
         z = surface_f([x0, y0])
         r = 0.5
+        parameter_manager = ParameterManager(uv=[x0, y0])
+        p = ParametricSurface(circular_analytical_domain, surface_f, surface_df)        
         s3 = MeshedSurfaceWithNormalOffset(
-            analytical_domain=b,
-            f_z=lambda u, v: surface_f([u, v]),
-            d_f=lambda u, v: surface_df([u, v]),
+            parametric_surface=p,
             h_u=0.0125,
             h_v=0.0125,
             position=np.array([0, 0, 0]),
             material=TerraCottaTiles(texture_scales=[0.1, 0.1]),
-            r=r,
+            offset=r,
         )
         self.objects.append(s3)
         s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[0.5, 0.2]), bottom_height=-3)
         self.objects.append(s4)
-        sphere_3d_position = [b.fx(x0, y0), b.fy(x0, y0), z]
-
-        r = RollingSphereParametric(
-            analytical_domain=b,
-            surface_f=surface_f,
-            surface_df=surface_df,
+        sphere_3d_position = [x0, y0, z]
+        r = RollingSphereOnSurface(
+            p,
             position=np.array(sphere_3d_position),
-            initial_parameter=[x0, y0],
             material=GoldFoil(texture_scales=[3, 3]),
             r=r,
         )

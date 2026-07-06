@@ -8,9 +8,7 @@ from numpy.typing import NDArray
 
 from .objects3d import Object3d
 from .material import Material
-
-AnalyticalDomain = namedtuple("AnalyticalDomain", ["fx", "fy", "Jf", "range_u", "range_v"])
-
+from surfaces.surface_base import AnalyticalDomain, Surface, ParameterManager
 
 class Mesh(Object3d):
     """
@@ -104,40 +102,38 @@ class MeshedSurface(Mesh):
     The Surface class extends the mesh class by a z component
     """
 
-    def __init__(self, analytical_domain: AnalyticalDomain, f_z, d_f, h_u, h_v, position, material):
-        super().__init__(analytical_domain, h_u, h_v, position, material)
-        self.f_z = f_z
-        self.df = d_f
-        h_u = (analytical_domain.range_u[1] - analytical_domain.range_u[0]) / int(1 / h_u + 1)
-        h_v = (analytical_domain.range_v[1] - analytical_domain.range_v[0]) / int(1 / h_v + 1)
+    def __init__(self, parametric_surface: Surface, h_u, h_v, position, material):
+        super().__init__(parametric_surface.parametric_domain, h_u, h_v, position, material)
+        self.f_z = parametric_surface.f
+        self.df = parametric_surface.f_q
         self.texture_coords_u = np.zeros([len(self.u_values), len(self.v_values)])
         self.texture_coords_v = np.zeros([len(self.u_values), len(self.v_values)])
         for i, (u, u_next) in enumerate(zip(self.u_values, self.u_values[1:])):
             for j, (v, v_next) in enumerate(zip(self.v_values, self.v_values[1:])):
-                delta_f_v = np.array(self.value(u_next, v_next)) - np.array(self.value(u_next, v))
-                delta_f_u = np.array(self.value(u_next, v_next)) - np.array(self.value(u, v_next))
+                delta_f_v = np.array(self.value([u_next, v_next])) - np.array(self.value([u_next, v]))
+                delta_f_u = np.array(self.value([u_next, v_next])) - np.array(self.value([u, v_next]))
                 if j == 0:
-                    self.texture_coords_v[i, j] = self.value(u_next, v_next)[1]
+                    self.texture_coords_v[i, j] = self.value([u_next, v_next])[1]
                 else:
                     self.texture_coords_v[i, j] = self.texture_coords_v[i, j - 1] + delta_f_v[1]
                 if i == 0:
-                    self.texture_coords_u[i, j] = self.value(u_next, v_next)[0]
+                    self.texture_coords_u[i, j] = self.value([u_next, v_next])[0]
                 else:
                     self.texture_coords_u[i, j] = self.texture_coords_u[i - 1, j] + delta_f_u[0]
-                self.texture_coords_u[i, j] = self.value(u, v)[0]
-                self.texture_coords_v[i, j] = self.value(u, v)[1]
+                self.texture_coords_u[i, j] = self.value([u, v])[0]
+                self.texture_coords_v[i, j] = self.value([u, v])[1]
         self.texture_coords_u += np.min(self.texture_coords_u)
         self.texture_coords_v += np.min(self.texture_coords_v)
         self.texture_coords_u = self.texture_coords_u.flatten()
         self.texture_coords_v = self.texture_coords_v.flatten()
         fullnodes = [
             (
-                *np.roll(self.value(u, v), -1),
-                *np.roll(self.normal(u, v), -1),
+                *np.roll(self.value([u, v]), -1),
+                *np.roll(self.normal([u, v]), -1),
                 texture_coord_u,
                 texture_coord_v,
-                *np.roll(self.tangent(u, v), -1),
-                *np.roll(self.bitangent(u, v), -1),
+                *np.roll(self.tangent([u, v]), -1),
+                *np.roll(self.bitangent([u, v]), -1),
             )
             for (u, v), texture_coord_u, texture_coord_v in zip(self.parameter_grid, self.texture_coords_u, self.texture_coords_v)
         ]
@@ -148,19 +144,19 @@ class MeshedSurface(Mesh):
         self._indices = np.array([range(0, self._nvertices)], dtype=np.uint32)
         self.translate(self.position)
 
-    def value(self, u, v):
-        return [self.analytical_domain.fx(u, v), self.analytical_domain.fy(u, v), self.f_z(u, v)]
+    def value(self, uv):
+        return [self.analytical_domain.fx(*uv), self.analytical_domain.fy(*uv), self.f_z(uv)]
 
-    def normal(self, u, v):
-        n = np.cross(self.tangent(u, v), self.bitangent(u, v))
+    def normal(self, uv):
+        n = np.cross(self.tangent(uv), self.bitangent(uv))
         return n / np.linalg.norm(n)
 
-    def tangent(self, u, v):
-        t = np.array([self.analytical_domain.Jf(u, v)[0, 0], self.analytical_domain.Jf(u, v)[0, 1], self.df(u, v)[0]])
+    def tangent(self, uv):
+        t = np.array([self.analytical_domain.Jf(*uv)[0, 0], self.analytical_domain.Jf(*uv)[0, 1], self.df(uv)[0]])
         return t / np.linalg.norm(t)
 
-    def bitangent(self, u, v):
-        b = np.array([self.analytical_domain.Jf(u, v)[1, 0], self.analytical_domain.Jf(u, v)[1, 1], self.df(u, v)[1]])
+    def bitangent(self, uv):
+        b = np.array([self.analytical_domain.Jf(*uv)[1, 0], self.analytical_domain.Jf(*uv)[1, 1], self.df(uv)[1]])
         return b / np.linalg.norm(b)
 
     @property
@@ -168,7 +164,7 @@ class MeshedSurface(Mesh):
         """
         Return the z values at the mesh nodes
         """
-        return (self.f_z(u, v) for u, v in self.parameter_grid)
+        return (self.f_z([u, v]) for u, v in self.parameter_grid)
 
 
 class MeshedSurfaceWithNormalOffset(MeshedSurface):
@@ -176,32 +172,15 @@ class MeshedSurfaceWithNormalOffset(MeshedSurface):
     The Surface class extends the mesh class by a z component
     """
 
-    def __init__(self, analytical_domain: AnalyticalDomain, f_z, d_f, h_u, h_v, position, material, r):
-        self.r = r
-        super().__init__(analytical_domain, f_z, d_f, h_u, h_v, position, material)
+    def __init__(self, parametric_surface: Surface, h_u, h_v, position, material, offset):
+        self.offset = offset
+        super().__init__(parametric_surface, h_u, h_v, position, material)
 
-    def value(self, u, v):
-        n = super().normal(u, v)
+    def value(self, uv):
+        n = super().normal(uv)
         n = n / np.linalg.norm(n)
-        n *= self.r
-        return [self.analytical_domain.fx(u, v) - n[0], self.analytical_domain.fy(u, v) - n[1], self.f_z(u, v) - n[2]]
-
-
-circular_analytical_domain = AnalyticalDomain(
-    lambda u, v: u * np.cos(v),
-    lambda u, v: u * np.sin(v),
-    lambda u, v: np.matrix([[np.cos(v), np.sin(v)], [-u * np.sin(v), u * np.cos(v)]]),
-    [0.5, 2.5],
-    [0, 2 * np.pi],
-)
-
-unit_square = AnalyticalDomain(
-    lambda u, v: u,
-    lambda u, v: v,
-    lambda u, v: np.matrix([[1, 0], [0, 1]]),
-    [-1, 1],
-    [-1, 1],
-)
+        n *= self.offset
+        return [self.analytical_domain.fx(*uv) - n[0], self.analytical_domain.fy(*uv) - n[1], self.f_z(uv) - n[2]]
 
 
 class MeshedSurfaceWall(Object3d):
@@ -224,11 +203,11 @@ class MeshedSurfaceWall(Object3d):
                 sums[1] = sums[0] + np.linalg.norm(d) * (v_next - v) / (2 * np.pi)
                 for is_bottom in [0, 1]:
                     for number, v_local in enumerate([v, v_next]):
-                        x, y, z0 = self.meshed_surface.value(u0, v_local)
+                        x, y, z0 = self.meshed_surface.value([u0, v_local])
                         z = z0 * is_bottom + (bottom_height) * (1 - is_bottom)
                         texture_coord_u = sums[number]
                         texture_coord_v = z
-                        t = self.meshed_surface.bitangent(u0, v_local)
+                        t = self.meshed_surface.bitangent([u0, v_local])
                         t[2] = 0
                         t /= np.linalg.norm(t)
                         b = np.array([0, 0, 1])

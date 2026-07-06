@@ -65,94 +65,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 
-from customgl.objects.surface import AnalyticalDomain
+from surfaces.surface_base import AnalyticalDomain, Surface
 
 
-class Surface:
-    """
-    A simple class for a surface.
-    Restricted to the graph of a function
-    """
-
-    @abstractmethod
-    def __call__(self, q: Tuple[np.float64, np.float64]) -> np.float64:
-        """Evaluate the surface at q"""
-
-    @abstractmethod
-    def dq(self, q: Tuple[np.float64, np.float64]) -> Tuple[np.float64, np.float64]:
-        """Evaluate the derivate with respect to q"""
-
-
-class Graph(Surface):
-    """
-    A simple class for a surface.
-    Restricted to the graph of a function
-    """
-
-    def __init__(
-        self,
-        f: Callable[[Tuple[np.float64, np.float64]], np.float64],  # The arguments are assumed to be Cartesian coordinates
-        f_q: Callable[[Tuple[np.float64, np.float64]], Tuple[np.float64, np.float64]],  # The arguments are assumed to be Cartesian coordinates
-    ):
-        self.f = f
-        self.f_q = f_q
-
-    def __call__(self, q: Tuple[np.float64, np.float64]) -> np.float64:
-        return self.f(q)
-
-    def dq(self, q: Tuple[np.float64, np.float64]) -> Tuple[np.float64, np.float64]:
-        """Evaluate the derivate with respect to q"""
-        return self.f_q(q)
-
-
-@dataclass
-class ParameterManager:
-    uv: Tuple[np.float64, np.float64]
-
-
-class ParametricSurface(Surface):
-    """
-    A simple class for a surface.
-    Restricted to the graph of a function
-    """
-
-    def __init__(
-        self,
-        parametric_domain: AnalyticalDomain,
-        parameter_manager: ParameterManager,
-        f: Callable[[Tuple[np.float64, np.float64]], np.float64],  # The arguments are assumed to be parameters according to parametric_domain
-        f_q: Callable[
-            [Tuple[np.float64, np.float64]], Tuple[np.float64, np.float64]
-        ],  # The arguments are assumed to be parameters according to parametric_domain
-    ):
-        self.parametric_domain = parametric_domain
-        self.parameter_manager = parameter_manager
-        self.f = f
-        self.f_q = f_q
-
-    def __call__(self, q):
-        uv = self._compute_parameters_from_xyposition(q, self.parameter_manager.uv)
-        self.parameter_manager.uv = uv
-        return self.f(self.parameter_manager.uv)
-
-    def dq(self, q):
-        """Evaluate the derivate with respect to q"""
-        uv = self._compute_parameters_from_xyposition(q, self.parameter_manager.uv)
-        self.parameter_manager.uv = uv
-        return np.array(np.matrix(self.parametric_domain.Jf(*self.parameter_manager.uv)) ** -1 @ self.f_q(self.parameter_manager.uv))[0]
-
-    def _compute_parameters_from_xyposition(self, q: Tuple[np.float64, np.float64], uv0: Tuple[np.float64, np.float64]):
-        g: NDArray[np.float64] = np.array([self.parametric_domain.fx(*uv0), self.parametric_domain.fy(*uv0)]) - q
-        i = 0
-        while np.linalg.norm(g) > 1e-12:
-            i += 1
-            if i > 10:
-                print(i, g, uv0)
-            Jg: NDArray[np.float64] = self.parametric_domain.Jf(*uv0)
-            g: NDArray[np.float64] = np.array([self.parametric_domain.fx(*uv0), self.parametric_domain.fy(*uv0)]) - q
-            delta = np.array((np.matrix(Jg) ** -1).T @ g)[0]
-            uv0 -= delta
-        return uv0
 
 
 class AlgebraicCondition:
@@ -169,8 +84,7 @@ class AlgebraicCondition:
         return q[2] - self.surface(q[0:2])
 
     def dq(self, q: NDArray[np.float64]):
-        """Evaluate the derivate with respect to q"""
-        # return -np.array([*self.surface.f_q(q[0:2]), -1])
+        """Evaluate the derivate with respect to q"""        
         return -np.array([*self.surface.dq(q[0:2]), -1])
 
 
@@ -404,19 +318,6 @@ if __name__ == "__main__":
                 + gaussiandq(q, mean_v4, 0.5 * w)
                 + 0.35 * atandq(0.35 * np.array(q))
             )
-
-        # surface_f=lambda q:surface_fx(q)*gaussian(q) + 0.0 * np.dot(q-mean_v,q-mean_v)
-        # surface_df=lambda q:[surface_dfx(q)*gaussian(q),0] + surface_fx(q)*gaussiandq(q) + 0.0*(q-mean_v)
-    #                     -2*surface_fx(q)*np.exp(-(q[1]-m[0])**2/w**2)* (q[1]-m[0])/w**2,
-    #                     -2*surface_fx(q)*np.exp(-(q[1]-m[0])**2/w**2)* (q[2]-m[1])/w**2
-    # surface_f = lambda q: (4+np.sin(q[0])) * (3 - 0.3 * q[0])
-    # surface_df = lambda q: [(-0.3 * np.sin(q[0]) + (3 - 0.3 * q[0]) * np.cos(q[0])), 0]
-
-    # surface_f = lambda q: q[0] ** 2
-    # surface_df = lambda q: np.array([2 * q[0], 0.0])
-
-    # surface_f = lambda q: 0
-    # surface_df = lambda q: np.array([0.0, 0.0])
     a = AnalyticalDomain(
         lambda u, v: u * np.cos(v),
         lambda u, v: u * np.sin(v),
@@ -450,17 +351,6 @@ if __name__ == "__main__":
     y = [x[1] for x in rattle.qs]
     z = [x[2] for x in rattle.qs]
     axes = plt.figure().add_subplot(projection="3d")
-    # m = MeshedSurface(analytical_domain=a, f_z = lambda u,v: surface_f([u*np.cos(v),u*np.sin(v)]), h_u=0.05,h_v=0.05)
-    m = MeshedSurface(
-        analytical_domain=b,
-        f_z=lambda u, v: surface_f([u, v]),
-        d_f=lambda u, v: surface_df([u, v]),
-        h_u=0.0125,
-        h_v=0.0125,
-        position=np.array([0, 0, 0]),
-        material=None,
-    )
-    # m.plot_surface(axes)
     axes.scatter3D(
         x,
         y,
