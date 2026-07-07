@@ -422,6 +422,7 @@ class MyQWidget(QWidget):
         lighting_panel.slider_changed.connect(self.gl.set_lights)
         # update camera FOV whenever the camera sliders change
         lighting_panel.slider_changed.connect(lambda _tab_defs: self.gl.set_camera_from_gui(lighting_panel.camera_config))
+
         # when the GLWidget has prepared its scene and camera, initialize the GUI with the camera FOV
         def _on_gl_camera_ready(camera_obj):
             try:
