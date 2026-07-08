@@ -245,19 +245,10 @@ class GLWidget(QOpenGLWidget):
         The GUI exposes FOV in degrees; the internal camera expects a "fov"
         value that is passed to getCentralProjectionMatrix as tan(angle/2).
         """
-        try:
-            deg = camera_config.field_of_view.get("FOV")
-        except Exception:
-            return
-        if deg is None:
-            return
-        try:
-            angle_rad = np.deg2rad(float(deg))
-            fov_value = np.tan(angle_rad * 0.5)
-        except Exception:
-            return
-        if self.camera is not None:
-            self.camera.fov = fov_value
+        deg = camera_config.field_of_view.get("FOV")
+        angle_rad = np.deg2rad(float(deg))
+        fov_value = np.tan(angle_rad * 0.5)
+        self.camera.fov = fov_value
         # opengl_camera uses the same Camera instance, so no extra sync needed
         self.update()
 
@@ -266,9 +257,7 @@ class GLWidget(QOpenGLWidget):
         self.repaint()
 
     def unproject(self, window_x: int, window_y: int):
-        if not self.is_initalized:
-            return np.array([0, 0, 0, 1])
-        if not self.isValid():
+        if not self.is_initalized or not self.isValid():
             return np.array([0, 0, 0, 1])
         self.makeCurrent()
         try:
