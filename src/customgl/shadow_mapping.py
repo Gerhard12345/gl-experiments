@@ -36,7 +36,9 @@ from .drawing.openglrenderer import (
 
 from .helper.windowsscaling import get_windows_scaling_factor
 from .objects.camera import Camera
-from .scenes.scene import Scene, Scene1, Scene3, Scene4
+from .scenes.scene import Scene
+from .scenes.demoscenes import Scene1, Scene3
+from .plugins.scenewithrollingsphere import Scene4
 from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig, CameraConfig
 from .converters.lightsettingsconverter import LightSettingsConverter
 from .drawing.lights import Lights
