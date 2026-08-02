@@ -84,4 +84,4 @@ class SceneView:
         for current_object in self.viewable_objects:
             modelmat = current_object.baseobject.modelmat
             shader.set_modelmat(modelmat.astype(np.float32))
-            current_object.draw(cull_face=cull_face)
+            current_object.draw(cull_face=current_object.baseobject.cull_face)

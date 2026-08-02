@@ -267,3 +267,12 @@ class QuadRenderer:
     def set_size(self, width: int, height: int):
         self.width = width
         self.height = height
+
+class RGBRendererWithMeshLines(RGBRenderer):
+    def initialize(self):
+        self.framebuffer = CustomFrameBuffer.with_rgb_and_depth()
+        shader = Shader()
+        shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_directional_lights)
+        shader.add_define("N_POINT_LIGHTS", self.n_point_lights)
+        shader.compile_shader(self.shader_directory / "main_highlighting_triangle_bounds.vert", self.shader_directory / "main_highlighting_triangle_bounds.frag")
+        self.shader = shader

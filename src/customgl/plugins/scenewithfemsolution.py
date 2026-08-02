@@ -2,8 +2,10 @@ from customgl import Scene
 import numpy as np
 from customgl import MeshedSurfaceWithNormalOffset, MeshedSurfaceWall
 from customgl import RoomDefinition, build_room
+from customgl import Object3d
 
 from customgl import (
+    Material,
     WoodenCeiling,
     GoldFoil,
     MuddyConcrete,
@@ -12,65 +14,166 @@ from customgl import (
     WornMetal,
 )
 
+from typing import List
 from .rollingsphereonsurface import RollingSphereOnSurface
 from surfaces import AnalyticalDomain, ParametricSurface
+from pyfemsolver.solverlib.geometry import Line, Region, Geometry
+from pyfemsolver.solverlib.space import H1Space
+from pyfemsolver.solverlib.solving import solve_bvp, set_boundary_values
+from pyfemsolver.visual.visual import show_grid_function
+from pyfemsolver.solverlib.meshing import generate_mesh
+from pyfemsolver.solverlib.geometry import Line, Region, Geometry
+from pyfemsolver.solverlib.coefficientfunction import VariableCoefficientFunction, ConstantCoefficientFunction
+from pyfemsolver.solverlib.forms import BilinearForm, LinearForm
+from pyfemsolver.solverlib.integrators import Laplace
 
-class Scene4(Scene):
-    dangle = 0.01
-    rotz = 45
-    roty = 35.26
+def u_bnd(x: float, y: float) -> float:  # pylint:disable=C0116
+    return (x - 0.5) ** 3 + (y - 0.5) ** 3
+
+
+g = VariableCoefficientFunction({1: u_bnd, 2: u_bnd, 3: u_bnd, 4: u_bnd}, f_shape=(1, 1))
+
+orders = [1, 4]
+def generate_vertices():
+    height = 0.6  # pylint:disable=C0103
+    width = 2.4  # pylint:disable=C0103
+    center_x = [0, 0]
+    center_y = [-2, 2]
+    lines: List[Line] = []
+    lines.append(Line(start=(-6, -6), end=(6, -6), left_region=1, right_region=0, h=0.5, boundary_index=1))
+    lines.append(Line(start=(6, -6), end=(6, 6), left_region=1, right_region=0, h=0.5, boundary_index=1))
+    lines.append(Line(start=(6, 6), end=(-6, 6), left_region=1, right_region=0, h=0.5, boundary_index=1))
+    lines.append(Line(start=(-6, 6), end=(-6, -6), left_region=1, right_region=0, h=0.5, boundary_index=1))
+    # Plate 1
+    lines.append(
+        Line(
+            start=(center_x[0] - width * 0.5, center_y[0] - height * 0.5),
+            end=(center_x[0] + width * 0.5, center_y[0] - height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=2,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[0] + width * 0.5, center_y[0] - height * 0.5),
+            end=(center_x[0] + width * 0.5, center_y[0] + height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=2,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[0] + width * 0.5, center_y[0] + height * 0.5),
+            end=(center_x[0] - width * 0.5, center_y[0] + height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=2,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[0] - width * 0.5, center_y[0] + height * 0.5),
+            end=(center_x[0] - width * 0.5, center_y[0] - height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=2,
+        )
+    )
+    # Plate 2
+    lines.append(
+        Line(
+            start=(center_x[1] - width * 0.5, center_y[1] - height * 0.5),
+            end=(center_x[1] + width * 0.5, center_y[1] - height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=3,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[1] + width * 0.5, center_y[1] - height * 0.5),
+            end=(center_x[1] + width * 0.5, center_y[1] + height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=3,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[1] + width * 0.5, center_y[1] + height * 0.5),
+            end=(center_x[1] - width * 0.5, center_y[1] + height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=3,
+        )
+    )
+    lines.append(
+        Line(
+            start=(center_x[1] - width * 0.5, center_y[1] + height * 0.5),
+            end=(center_x[1] - width * 0.5, center_y[1] - height * 0.5),
+            left_region=0,
+            right_region=1,
+            h=0.2,
+            boundary_index=3,
+        )
+    )
+    regions = [Region(region_id=1, mesh_inner=0.5)]
+    geometry = Geometry(lines=lines, regions=regions)
+
+    mesh = generate_mesh(geometry, max_gradient=0.07)
+    coordinates_of_trigs = [[mesh.points[point].coordinates for point in trig.points] for trig in mesh.trigs]
+    bary_centric = [[1,0,0],[0,1,0],[0,0,1]]
+    vertices = [[(*np.roll([float(lii[0]),
+                  float(lii[1]),
+                  0.0],-1),
+                  *np.roll([0.0, 0.0, 1.0],-1),
+                  0,
+                  0,
+                  *bary,
+                  0.0,
+                  0.0,
+                  0.0
+                    ) for lii, bary in zip(li,bary_centric)] for li in coordinates_of_trigs]
+    return vertices, mesh
+    # space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
+
+    # laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
+    # bilinearform = BilinearForm([laplace])
+    # linearform = LinearForm([])
+
+    # set boundary values
+    # u = space.create_gridfunction()
+    # set_boundary_values(u, space, g)
+
+    # solve_bvp(bilinearform, linearform, u, space)
+    # ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
+
+class FemMesh(Object3d):
+    def __init__(self, position=[0, 0, 0], scale=[1, 1, 1], material = Material()):
+        super().__init__(position=position, scale=scale, material=material)
+        vertices, mesh = generate_vertices()
+        self._nvertices = len(vertices) * 3
+        print(self._nvertices)
+        self.cull_face = False
+        vertices = np.array(vertices).flatten()
+        self._vertices = vertices.astype(np.float32)
+        self._indices = np.array([range(0, self._nvertices)], dtype=np.uint32)
+        self.scale(scale).translate(position)
+
+
+
+class SceneWithFemSolution(Scene):
 
     def __init__(self):
-        super(Scene4, self).__init__()
-
-        def surface_f(rphi):
-            return 2 + 0.125 * (rphi[0] - 8) ** 2 - 0.5 * np.sin(2 * rphi[1])
-
-        def surface_df(rphi):
-            return [2 * 0.125 * (rphi[0] - 8), -2 * 0.5 * np.cos(2 * rphi[1])]
-
-        bounds = [[6, 10], [0, 2 * np.pi]]
-        x0 = 9
-        y0 = 2 * np.pi - 0.4
-        circular_analytical_domain = AnalyticalDomain(
-            lambda u, v: u * np.cos(v),
-            lambda u, v: u * np.sin(v),
-            lambda u, v: np.matrix([[np.cos(v), np.sin(v)], [-u * np.sin(v), u * np.cos(v)]]),
-            *bounds,
-        )
-        z = surface_f([x0, y0])
-        r = 0.5
-        p = ParametricSurface(circular_analytical_domain, surface_f, surface_df)
-        s3 = MeshedSurfaceWithNormalOffset(
-            surface=p,
-            h_u=0.0125,
-            h_v=0.0125,
-            position=np.array([0, 0, 0]),
-            material=TerraCottaTiles(texture_scales=[0.1, 0.1]),
-            offset=r,
-        )
-        self.objects.append(s3)
-        s4 = MeshedSurfaceWall(s3, material=WhiteBricks(texture_scales=[0.5, 0.2]), bottom_height=-3)
-        self.objects.append(s4)
-        sphere_3d_position = [x0, y0, z]
-        r = RollingSphereOnSurface(
-            p,
-            position=np.array(sphere_3d_position),
-            material=GoldFoil(texture_scales=[3, 3]),
-            r=r,
-        )
-        self.objects.append(r)
-        room_definition = RoomDefinition(
-            x=18,
-            y=6.5,
-            z=18,
-            bottom_material=MuddyConcrete(texture_scales=[1, 1]),
-            top_material=WoodenCeiling(texture_scales=[1, 1]),
-            left_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
-            right_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
-            front_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
-            back_material=WornMetal(texture_scales=[4, 4 * 6.5 / 18]),
-            position=[0, 3.5, 0],
-        )
-        object_views = build_room(room_definition)
-        self.objects.extend(object_views)
+        super(SceneWithFemSolution, self).__init__()
+        mesh = FemMesh()
+        self.objects.append(mesh)

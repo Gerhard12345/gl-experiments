@@ -16,6 +16,7 @@ class Object3d:
         self._indices: NDArray = None
         self.dynamics = np.matrix(np.identity(4))
         self.modelmat = np.matrix(np.identity(4))
+        self.cull_face = True
 
     def get_n_trigs(self):
         return len(self._vertices) // 3
