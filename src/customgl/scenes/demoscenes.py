@@ -17,6 +17,7 @@ from customgl import (
 from ..plugins.rollingsphereonsurface import RollingSphereOnSurface
 from surfaces import AnalyticalDomain, Graph
 
+
 class Scene1(Scene):
     dangle = 0.01
     rotz = 45

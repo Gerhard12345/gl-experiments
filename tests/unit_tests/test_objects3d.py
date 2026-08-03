@@ -18,9 +18,7 @@ class DummyTransformations:
     @staticmethod
     def scalemat(scale_xyz: np.ndarray):
         # return a predictable matrix dependent on input
-        return np.matrix(
-            [[scale_xyz[0], 0, 0, 0], [0, scale_xyz[1], 0, 0], [0, 0, scale_xyz[2], 0], [0, 0, 0, 1]]
-        ).transpose()
+        return np.matrix([[scale_xyz[0], 0, 0, 0], [0, scale_xyz[1], 0, 0], [0, 0, scale_xyz[2], 0], [0, 0, 0, 1]]).transpose()
 
     @staticmethod
     def translationmat(position: np.ndarray):
@@ -33,7 +31,11 @@ class DummyTransformations:
 
     @staticmethod
     def localrotationmat_axis(position, angle, axis):
-        return DummyTransformations.translationmat(-position) * DummyTransformations.rotationmat_axis(angle, axis) * DummyTransformations.translationmat(position)
+        return (
+            DummyTransformations.translationmat(-position)
+            * DummyTransformations.rotationmat_axis(angle, axis)
+            * DummyTransformations.translationmat(position)
+        )
 
 
 Object3d = objects3d.Object3d

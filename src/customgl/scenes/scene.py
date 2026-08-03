@@ -59,5 +59,3 @@ def build_room(roomdefinition: RoomDefinition) -> List[Object3d]:
     for myobject in objects:
         myobject.translate(center_position)
     return objects
-
-
