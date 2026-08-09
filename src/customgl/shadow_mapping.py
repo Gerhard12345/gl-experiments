@@ -41,12 +41,12 @@ from .scenes.demoscenes import Scene1, Scene3
 from .plugins.scenewithrollingsphere import Scene4
 from .guielements.tabview import (
     CenterHighlightSplitter,
-    LightingControlPanel,
+    LightingSettingsTab,
     LightingPanelConfig,
+    CameraSettingsTab,
     CameraConfig,
     TopPanel,
-    RightSideTabbedPanel,
-    RightSidePanel,
+    TabbedPanel,
 )
 from .converters.lightsettingsconverter import LightSettingsConverter
 from .drawing.lights import Lights
@@ -133,7 +133,6 @@ class GLWidget(QOpenGLWidget):
         self.is_initalized = False
         self._scene_thread: QThread | None = None
         self._scene_worker = None
-        # signal `camera_ready` is declared at class scope
 
     def initializeGL(self):
         """Initialize the renderers and begin scene preparation."""
@@ -406,18 +405,19 @@ class MyQWidget(QWidget):
         left_panel.setLayout(left_layout)
 
         # RIGHT COLUMN (Column 2)
-        #right_panel = RightSideTabbedPanel()
-        right_panel = LightingControlPanel()
-        #right_panel.add_tab(LightingControlPanel(), "Lighting")
-        lighting_panel = right_panel.tab_widget.widget(0)
-        config.lights_loaded.connect(right_panel.load_config)
+        right_panel = TabbedPanel()
+        camera_settings_tab = CameraSettingsTab()
+        light_settings_tab = LightingSettingsTab()
+        right_panel.add_tab(light_settings_tab, "Lights")
+        right_panel.add_tab(camera_settings_tab, "Camera")
+        config.lights_loaded.connect(light_settings_tab.load_config)
         config.load()
 
         self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
-        self.gl.lights_factory = lambda: LightSettingsConverter(right_panel._TAB_DEFS).to_lights()
-        right_panel.slider_changed.connect(self.gl.set_lights)
+        self.gl.lights_factory = lambda: LightSettingsConverter(light_settings_tab._TAB_DEFS).to_lights()
+        light_settings_tab.slider_changed.connect(self.gl.set_lights)
         # update camera FOV whenever the camera sliders change
-        right_panel.slider_changed.connect(lambda _tab_defs: self.gl.set_camera_from_gui(right_panel.camera_config))
+        camera_settings_tab.slider_changed.connect(self.gl.set_camera_from_gui)
 
         # when the GLWidget has prepared its scene and camera, initialize the GUI with the camera FOV
         def _on_gl_camera_ready(camera_obj):
@@ -447,7 +447,7 @@ class MyQWidget(QWidget):
                 # fallback to angle_from_tan if available
                 chosen = angle_from_tan if angle_from_tan is not None else (angle_from_rad if angle_from_rad is not None else 60.0)
             val = int(round(chosen))
-            right_panel.set_camera_config(CameraConfig(field_of_view={"FOV": val}))
+            camera_settings_tab.set_camera_config(CameraConfig(field_of_view={"FOV": val}))
 
         self.gl.camera_ready.connect(_on_gl_camera_ready)
         # Add panels to splitter
