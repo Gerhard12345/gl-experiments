@@ -39,7 +39,15 @@ from .objects.camera import Camera
 from .scenes.scene import Scene
 from .scenes.demoscenes import Scene1, Scene3
 from .plugins.scenewithrollingsphere import Scene4
-from .guielements.tabview import CenterHighlightSplitter, LightingControlPanel, LightingPanelConfig, CameraConfig
+from .guielements.tabview import (
+    CenterHighlightSplitter,
+    LightingControlPanel,
+    LightingPanelConfig,
+    CameraConfig,
+    TopPanel,
+    RightSideTabbedPanel,
+    RightSidePanel,
+)
 from .converters.lightsettingsconverter import LightSettingsConverter
 from .drawing.lights import Lights
 from .app_config import ShadowMappingConfig
@@ -344,36 +352,34 @@ class MyQWidget(QWidget):
         # Create horizontal splitter for left and right columns
         splitter = CenterHighlightSplitter(Qt.Orientation.Horizontal)
 
+        # TOP CONTROLS
+        top_panel = TopPanel()
+        top_panel.setFixedHeight(64)
+
+        combobox = QComboBox()
+        combobox.setFixedHeight(24)
+        combobox.addItems(["Scene"] + [f"Shadow {i + 1}" for i in range(config.num_directional_lights)])
+        combobox.activated.connect(self.activated)
+        top_panel.add_widget(combobox, row=0)
+
+        button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "manual camera"]
+        button_states = [True, True, True, True, False, True]
+        button_parameters = [0, 1, 2, 3, -1, -2]
+        for button_text, button_parameter, button_state in zip(button_texts, button_parameters, button_states):
+            button = QPushButton(button_text)
+            button.setCheckable(True)
+            button.setChecked(button_state)
+            button.setFixedHeight(24)
+            button.pressed.connect(lambda val=button_parameter: self.toggle(val))
+            top_panel.add_widget(button, row=1)
+        top_panel.add_stretch(row=1)
+
+        main_layout.addWidget(top_panel)
+
         # LEFT COLUMN (Column 1)
         left_panel = QWidget()
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(5, 5, 5, 5)
-
-        # Row 1: Scene dropdown
-        combobox = QComboBox()
-        combobox.addItems(["Scene"] + [f"Shadow {i + 1}" for i in range(config.num_directional_lights)])
-        combobox.activated.connect(self.activated)
-        left_layout.addWidget(combobox)
-
-        # Row 2: Buttons
-        button_layout = QHBoxLayout()
-        button_texts = ["diffuse map", "normal map", "amb. occ. map", "specular map", "object update", "manual camera"]
-        button_states = [True, True, True, True, False, True]
-        button_parameters = [0, 1, 2, 3, -1, -2]
-        for button_text, button_parameter, button_state in zip(
-            button_texts,
-            button_parameters,
-            button_states,
-        ):
-            button = QPushButton(button_text)
-            button.setCheckable(True)
-            button.setChecked(button_state)
-            button.pressed.connect(lambda val=button_parameter: self.toggle(val))
-            button_layout.addWidget(button)
-        left_layout.addLayout(button_layout)
-
-        # Row 3: GLWidget with logging widget below (horizontal splitter)
-        gl_log_splitter = CenterHighlightSplitter(Qt.Orientation.Vertical)
 
         # Logging widget and handler are created before the GL widget so early logs are captured
         self.log_widget = QPlainTextEdit()
@@ -387,6 +393,7 @@ class MyQWidget(QWidget):
         self.gl.format().setVersion(4, 2)
         self.gl.format().setProfile(QSurfaceFormat.OpenGLContextProfile.CoreProfile)
 
+        gl_log_splitter = CenterHighlightSplitter(Qt.Orientation.Vertical)
         gl_log_splitter.addWidget(self.gl)
         gl_log_splitter.addWidget(self.log_widget)
         gl_log_splitter.setStretchFactor(0, 3)  # GLWidget gets more space
@@ -399,20 +406,18 @@ class MyQWidget(QWidget):
         left_panel.setLayout(left_layout)
 
         # RIGHT COLUMN (Column 2)
-        right_panel = QWidget()
-        right_layout = QGridLayout()
-        right_layout.setContentsMargins(5, 5, 5, 5)
-
-        # Row 0: Tab widget (one tab per light + Camera Settings)
-        lighting_panel = LightingControlPanel()
-        config.lights_loaded.connect(lighting_panel.load_config)
+        #right_panel = RightSideTabbedPanel()
+        right_panel = LightingControlPanel()
+        #right_panel.add_tab(LightingControlPanel(), "Lighting")
+        lighting_panel = right_panel.tab_widget.widget(0)
+        config.lights_loaded.connect(right_panel.load_config)
         config.load()
 
         self.gl.scene_factory = lambda: _SCENE_CLASSES[app_config.scene_name]()
-        self.gl.lights_factory = lambda: LightSettingsConverter(lighting_panel._TAB_DEFS).to_lights()
-        lighting_panel.slider_changed.connect(self.gl.set_lights)
+        self.gl.lights_factory = lambda: LightSettingsConverter(right_panel._TAB_DEFS).to_lights()
+        right_panel.slider_changed.connect(self.gl.set_lights)
         # update camera FOV whenever the camera sliders change
-        lighting_panel.slider_changed.connect(lambda _tab_defs: self.gl.set_camera_from_gui(lighting_panel.camera_config))
+        right_panel.slider_changed.connect(lambda _tab_defs: self.gl.set_camera_from_gui(right_panel.camera_config))
 
         # when the GLWidget has prepared its scene and camera, initialize the GUI with the camera FOV
         def _on_gl_camera_ready(camera_obj):
@@ -442,13 +447,9 @@ class MyQWidget(QWidget):
                 # fallback to angle_from_tan if available
                 chosen = angle_from_tan if angle_from_tan is not None else (angle_from_rad if angle_from_rad is not None else 60.0)
             val = int(round(chosen))
-            lighting_panel.set_camera_config(CameraConfig(field_of_view={"FOV": val}))
+            right_panel.set_camera_config(CameraConfig(field_of_view={"FOV": val}))
 
         self.gl.camera_ready.connect(_on_gl_camera_ready)
-        right_layout.addWidget(lighting_panel, 0, 0)
-        right_layout.setRowStretch(0, 1)
-        right_panel.setLayout(right_layout)
-
         # Add panels to splitter
         splitter.addWidget(left_panel)
         splitter.addWidget(right_panel)

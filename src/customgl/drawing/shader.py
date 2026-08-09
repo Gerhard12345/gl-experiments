@@ -27,9 +27,13 @@ class Shader:
         shader = GL.glCreateShader(shader_type)
         GL.glShaderSource(shader, bytes(code, "utf-8"))
         GL.glCompileShader(shader)
+        compile_status = GL.glGetShaderiv(shader, GL.GL_COMPILE_STATUS)
+        if not compile_status:
+            info_log = GL.glGetShaderInfoLog(shader).decode("utf-8")
+            raise RuntimeError(f"Shader compile error ({shader_type}): {info_log}")
         return shader
 
-    def compile_shader(self, vertex_code_file: Path, fragment_code_file: Path, geometry_code_file: Path = None) -> None:
+    def compile_shader(self, vertex_code_file: Path = None, fragment_code_file: Path = None, geometry_code_file: Path = None, compute_code_file: Path = None) -> None:
         ## shader construction
 
         program = GL.glCreateProgram()
@@ -43,8 +47,15 @@ class Shader:
         if geometry_code_file is not None:
             geometry_shader = self._create_and_compile_shader(geometry_code_file, GL.GL_GEOMETRY_SHADER)
             GL.glAttachShader(program, geometry_shader)
+        if compute_code_file is not None:
+            compute_shader = self._create_and_compile_shader(compute_code_file, GL.GL_COMPUTE_SHADER)
+            GL.glAttachShader(program, compute_shader)
 
         GL.glLinkProgram(program)
+        link_status = GL.glGetProgramiv(program, GL.GL_LINK_STATUS)
+        if not link_status:
+            info_log = GL.glGetProgramInfoLog(program).decode("utf-8")
+            raise RuntimeError(f"Shader link error: {info_log}")
 
         if vertex_code_file is not None:
             GL.glDetachShader(program, vertex_shader)
@@ -52,10 +63,22 @@ class Shader:
             GL.glDetachShader(program, fragment_shader)
         if geometry_code_file is not None:
             GL.glDetachShader(program, geometry_shader)
+        if compute_code_file is not None:
+            GL.glDetachShader(program, compute_shader)
 
         self.program = program
 
+    def compile_compute_shader(self, compute_code_file: Path) -> None:
+        program = GL.glCreateProgram()
+        compute_shader = self._create_and_compile_shader(compute_code_file, GL.GL_COMPUTE_SHADER)
+        GL.glAttachShader(program, compute_shader)
+        GL.glLinkProgram(program)
+        GL.glDetachShader(program, compute_shader)
+        self.program = program
+
     def use(self):
+        if self.program is None:
+            raise RuntimeError("Shader program is not initialized")
         GL.glUseProgram(self.program)
 
     def set_viewmat(self, view_matrix):

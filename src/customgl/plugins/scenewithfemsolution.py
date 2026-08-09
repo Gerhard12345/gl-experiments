@@ -1,8 +1,12 @@
+from OpenGL import GL
+from pathlib import Path
+
 from customgl import Scene
 import numpy as np
 from customgl import MeshedSurfaceWithNormalOffset, MeshedSurfaceWall
 from customgl import RoomDefinition, build_room
-from customgl import Object3d
+from customgl import Object3d, InstancedObject3d, Trig
+from customgl import InstancedBuffer, Shader
 
 from customgl import (
     Material,
@@ -80,9 +84,43 @@ class FemMesh(Object3d):
         self.scale(scale).translate(position)
 
 
+def generate_vertices_and_trigs():
+    # singleslit = SingleSlitGeometryWith3Domains()
+    # mesh = generate_mesh(singleslit, max_gradient=0.4)
+    doubleslit = DoubleSlitGeometry()
+    mesh = generate_mesh(doubleslit, max_gradient=0.75)
+
+    vertices = np.array([point.coordinates for point in mesh.points], dtype=np.float32)
+    trig_indices = np.array([trig.points for trig in mesh.trigs], dtype=np.uint32)
+    trigs = np.zeros((len(mesh.trigs), 4), dtype=np.uint32)
+    trigs[:, :3] = trig_indices
+    edge_indices = np.array([edge.points for edge in mesh.edges], dtype=np.uint32)
+    edges = np.zeros((len(mesh.edges), 3), dtype=np.uint32)
+    edges[:, :2] = edge_indices
+    return vertices, trigs, edges, mesh
+
+
 class SceneWithFemSolution(Scene):
 
     def __init__(self):
         super(SceneWithFemSolution, self).__init__()
         mesh = FemMesh()
         self.objects.append(mesh)
+
+
+
+class SceneWithInstancedFemSolution(Scene):
+    def __init__(self):
+        super(SceneWithInstancedFemSolution, self).__init__()
+        vertices, trigs, edges, mesh = generate_vertices_and_trigs()
+        helper = Trig(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
+
+        highlight_data = np.zeros((len(trigs), 4), dtype=np.float32)
+        self.selected_triangle_index = 400
+        highlight_data[self.selected_triangle_index, :] = 1.0
+
+        instanced_fem_mesh = InstancedObject3d(helper, data = [vertices, trigs, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances = len(mesh.trigs))
+        self.instanced_objects.append(instanced_fem_mesh)        
+        self.num_triangles = len(mesh.trigs)
+    def select_triangle(self, triangle_index: int):
+        self.selected_triangle_index = triangle_index

@@ -7,17 +7,60 @@ from .material import Material
 from .transformations import Transformations
 
 
-class Object3d:
-    def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
-        self.position = position
-        self.scalev = scale
-        self.material = material
-        self._vertices = None
-        self._indices: NDArray = None
-        self.dynamics = np.matrix(np.identity(4))
-        self.modelmat = np.matrix(np.identity(4))
-        self.cull_face = True
+class RotateMixin:
+    def rotate_axis(self, angle: float, axis: NDArray[np.float32]):
+        self.modelmat *= Transformations.rotationmat_axis(angle, axis)
+        return self
 
+    def rotate_x(self, angle: float):
+        return self.rotate_axis(angle, np.array([1.0, 0.0, 0.0], dtype=np.float32))
+
+    def rotate_y(self, angle: float):
+        return self.rotate_axis(angle, np.array([0.0, 1.0, 0.0], dtype=np.float32))
+
+    def rotate_z(self, angle: float):
+        return self.rotate_axis(angle, np.array([0.0, 0.0, 1.0], dtype=np.float32))
+
+
+class LocalRotateMixin:
+    def local_rotate_axis(self, angle: float, axis: NDArray[np.float32]):
+        self.modelmat *= Transformations.localrotationmat_axis(self.position, angle, axis)
+        return self
+
+    def local_rot_x(self, angle: float):
+        return self.local_rotate_axis(angle, np.array([1.0, 0.0, 0.0], dtype=np.float32))
+
+    def local_rot_y(self, angle: float):
+        return self.local_rotate_axis(angle, np.array([0.0, 1.0, 0.0], dtype=np.float32))
+
+    def local_rot_z(self, angle: float):
+        return self.local_rotate_axis(angle, np.array([0.0, 0.0, 1.0], dtype=np.float32))
+
+
+class ScaleMixin:
+    def scale(self, scale_xyz: NDArray[np.float32]):
+        self.modelmat *= Transformations.scalemat(scale_xyz)
+        return self
+
+
+class TranslateMixin:
+    def translate(self, position: NDArray[np.float32]):
+        self.modelmat *= Transformations.translationmat(position)
+        return self
+
+
+class DynamicsMixin:
+    def applydynamics(self):
+        self.modelmat *= self.dynamics
+
+    def add_dynamic(self, dynamic) -> None:
+        self.dynamics *= dynamic
+
+    def update(self) -> None:
+        self.applydynamics()
+
+
+class VertexBufferBasedMixin:
     def get_n_trigs(self):
         return len(self._vertices) // 3
 
@@ -30,50 +73,39 @@ class Object3d:
     def get_indices(self) -> NDArray[np.float32]:
         return self._indices
 
-    def scale(self, scale_xyz: NDArray[np.float32]):
-        self.modelmat *= Transformations.scalemat(scale_xyz)
-        return self
+class InstancedBufferBasedMixin:
+    def get_data(self):
+        return self._data
 
-    def local_rot_x(self, angle: float):
-        self.modelmat *= Transformations.localrotationmat_axis(self.position, angle, np.array([1.0, 0, 0]))
-        return self
+    def get_gpu_index(self):
+        return self._gpu_index
 
-    def local_rot_y(self, angle: float):
-        self.modelmat *= Transformations.localrotationmat_axis(self.position, angle, np.array([0, 1.0, 0]))
-        return self
+    def get_num_instances(self):
+        return self._num_instances
 
-    def local_rot_z(self, angle: float):
-        self.modelmat *= Transformations.localrotationmat_axis(self.position, angle, np.array([0, 0, 1.0]))
-        return self
+    def set_num_instances(self, num_instances: int):
+        self._num_instances = num_instances
 
-    def rotate_x(self, angle: float):
-        self.rotate_axis(angle, np.array([1.0, 0.0, 0.0]))
-        return self
+class Object3d(RotateMixin, LocalRotateMixin, ScaleMixin, TranslateMixin, DynamicsMixin, VertexBufferBasedMixin):
+    def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
+        self.position = position
+        self.scalev = scale
+        self.material = material
+        self._vertices = None
+        self._indices: NDArray = None
+        self.dynamics = np.matrix(np.identity(4))
+        self.modelmat = np.matrix(np.identity(4))
+        self.cull_face = True
 
-    def rotate_y(self, angle: float):
-        self.rotate_axis(angle, np.array([0.0, 1.0, 0.0]))
-        return self
+class InstancedObject3d(InstancedBufferBasedMixin):
+    def __init__(self, base_object: Object3d, data:List[NDArray[np.float32]], gpu_index: List[int], instances: int):
+        self.baseobject = base_object
+        self._data = data
+        self._gpu_index = gpu_index
+        self._num_instances = instances
 
-    def rotate_z(self, angle: float):
-        self.rotate_axis(angle, np.array([0.0, 0.0, 1.0]))
-        return self
-
-    def rotate_axis(self, angle: float, axis: NDArray[np.float32]):
-        self.modelmat *= Transformations.rotationmat_axis(angle, axis)
-        return self
-
-    def translate(self, position: NDArray[np.float32]):
-        self.modelmat *= Transformations.translationmat(position)
-        return self
-
-    def applydynamics(self):
-        self.modelmat *= self.dynamics
-
-    def add_dynamic(self, dynamic) -> None:
-        self.dynamics *= dynamic
-
-    def update(self) -> None:
-        self.applydynamics()
+    def set_instances(self, instances: int):
+        self.num_instances = instances
 
 
 class Cube(Object3d):
@@ -150,6 +182,26 @@ class Quad(Object3d):
         _nvertices = 6
         self._indices = np.array([range(0, _nvertices)], dtype=np.uint32)
         self._indices = np.array([[0, 1, 2], [3, 4, 5]], dtype=np.uint32)
+        self.scale(scale).translate(position)
+
+
+class Trig(Object3d):
+    def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
+        super().__init__(position=position, material=material, scale=scale)
+        tangent = [1, 0, 0]
+        bitangent = [0, 1, 0]
+        normal = [0, 0, -1]
+        self._vertices = np.array(
+            [
+                # positions      normal          uv        tangent        bitangent
+                [-1.0, -1.0, 0.0, *normal, 0.0, 0.0, *tangent, *bitangent],
+                [ 1.0, -1.0, 0.0, *normal, 1.0, 0.0, *tangent, *bitangent],
+                [ 0.0,  1.0, 0.0, *normal, 0.5, 1.0, *tangent, *bitangent],
+            ],
+            dtype=np.float32,
+        )
+        _nvertices = 3
+        self._indices = np.array([range(0, _nvertices)], dtype=np.uint32)
         self.scale(scale).translate(position)
 
 

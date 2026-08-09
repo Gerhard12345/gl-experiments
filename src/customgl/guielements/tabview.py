@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QSplitterHandle,
     QComboBox,
+    QSpinBox,
 )
 from PyQt6.QtCore import Qt, QSize, pyqtSlot
 from PyQt6.QtCore import QObject, pyqtSignal
@@ -106,6 +107,124 @@ class CenterHighlightSplitter(QSplitter):
 
     def createHandle(self):
         return CenterHighlightSplitterHandle(self.orientation(), self)
+
+
+class TopPanel(QWidget):
+    """Vertical top control area with separate rows for scene dropdowns and buttons."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(4)
+        self.setLayout(self.layout)
+        self._rows: List[QWidget] = []
+
+    def _ensure_row(self, row: int) -> QWidget:
+        while len(self._rows) <= row:
+            row_widget = QWidget(self)
+            row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(8)
+            row_widget.setLayout(row_layout)
+            self.layout.addWidget(row_widget)
+            self._rows.append(row_widget)
+        return self._rows[row]
+
+    def add_widget(self, widget: QWidget, row: int = 0) -> None:
+        self._ensure_row(row).layout().addWidget(widget)
+
+    def add_stretch(self, row: int | None = None) -> None:
+        if row is None:
+            row = len(self._rows) - 1 if self._rows else 0
+        self._ensure_row(row).layout().addStretch()
+
+
+class RightSideTabbedPanel(QWidget):
+    """Generic right-side panel with an optional top control row and a tabbed control area."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(5)
+        self.setLayout(self.layout)
+
+        self.top_controls = QWidget()
+        self.top_controls.setLayout(QHBoxLayout())
+        self.top_controls.layout().setContentsMargins(0, 0, 0, 0)
+        self.top_controls.layout().setSpacing(5)
+        self.layout.addWidget(self.top_controls)
+
+        self.tab_widget = QTabWidget()
+        self.layout.addWidget(self.tab_widget, 1)
+
+    def add_top_control(self, widget: QWidget) -> None:
+        self.top_controls.layout().addWidget(widget)
+
+    def add_tab(self, widget: QWidget, title: str) -> None:
+        self.tab_widget.addTab(widget, title)
+
+
+class TriangleSelectionPanel(QWidget):
+    """Panel for selecting a triangle index within an instanced FEM mesh."""
+
+    selected_triangle_changed = pyqtSignal(int)
+
+    def __init__(self, max_triangle_index: int = 0, initial_triangle_index: int = 0, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(5, 5, 5, 5)
+        self.layout.setSpacing(8)
+        self.setLayout(self.layout)
+
+        label = QLabel("Selected triangle index")
+        self.layout.addWidget(label)
+
+        self.spin_box = QSpinBox()
+        self.spin_box.setRange(0, max_triangle_index)
+        self.spin_box.setValue(initial_triangle_index)
+        self.spin_box.valueChanged.connect(self.selected_triangle_changed)
+        self.layout.addWidget(self.spin_box)
+
+        self.info_label = QLabel(f"0 … {max_triangle_index}")
+        self.layout.addWidget(self.info_label)
+        self.layout.addStretch()
+
+    def set_triangle_count(self, max_triangle_index: int) -> None:
+        self.spin_box.setMaximum(max_triangle_index)
+        self.info_label.setText(f"0 … {max_triangle_index}")
+
+    def set_triangle_index(self, index: int) -> None:
+        self.spin_box.setValue(index)
+
+    def set_triangle_count_and_value(self, max_triangle_index: int, current_index: int) -> None:
+        self.spin_box.setMaximum(max_triangle_index)
+        self.spin_box.setValue(current_index)
+        self.info_label.setText(f"0 … {max_triangle_index}")
+
+
+
+class RightSidePanel(QWidget):
+    """Generic right-side panel containing a tabbed area."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(5)
+        self.setLayout(self.layout)
+        self.tab_widget = QTabWidget()
+        self.layout.addWidget(self.tab_widget)
+
+    def add_tab(self, widget: QWidget, title: str) -> None:
+        self.tab_widget.addTab(widget, title)
+
+    def add_top_controls(self, widget: QWidget) -> None:
+        self.layout.insertWidget(0, widget)
+
+    def add_bottom_controls(self, widget: QWidget) -> None:
+        self.layout.addWidget(widget)
 
 
 class LightingControlPanel(QWidget):
