@@ -33,7 +33,9 @@ class Shader:
             raise RuntimeError(f"Shader compile error ({shader_type}): {info_log}")
         return shader
 
-    def compile_shader(self, vertex_code_file: Path = None, fragment_code_file: Path = None, geometry_code_file: Path = None, compute_code_file: Path = None) -> None:
+    def compile_shader(
+        self, vertex_code_file: Path = None, fragment_code_file: Path = None, geometry_code_file: Path = None, compute_code_file: Path = None
+    ) -> None:
         ## shader construction
 
         program = GL.glCreateProgram()

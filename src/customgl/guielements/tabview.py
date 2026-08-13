@@ -69,7 +69,7 @@ class SliderGroupMixin:
         default_values: List[Number],
         orientation=Qt.Orientation.Horizontal,
         step_size: float = 1.0,
-        callback = None
+        callback=None,
     ) -> Dict[str, QSlider]:
         """
         Add a separator and a group of sliders to the given layout.
@@ -304,6 +304,7 @@ class TriangleSelectionTab(QWidget):
 class CameraSettingsTab(QWidget, SliderGroupMixin):
     slider_changed = pyqtSignal(CameraConfig)
     _CAMERA_GROUP = SliderGroupDef("Field of View", {"FOV": (1, 179)}, [60])
+
     def __init__(self) -> None:
         super().__init__()
         tab_layout = QVBoxLayout()
@@ -317,13 +318,13 @@ class CameraSettingsTab(QWidget, SliderGroupMixin):
             self._CAMERA_GROUP.name,
             slider_config=self._CAMERA_GROUP.slider_config,
             default_values=self._CAMERA_GROUP.default_values,
-            callback=self._on_slider_changed
+            callback=self._on_slider_changed,
         )
         tab_layout.addStretch()
-        
 
         # self.setLayout(tab_layout)
         # self.tab_widget.addTab(tab, "Camera")
+
     def _on_slider_changed(self, value: int) -> None:
         self.slider_changed.emit((self.camera_config))
 
@@ -365,7 +366,7 @@ class LightingSettingsTab(QWidget, SliderGroupMixin):
         # self._camera_sliders: Dict[str, Dict[str, QSlider]] = {}
 
         # --- Lights tab ---
-        #lights_tab = QWidget()
+        # lights_tab = QWidget()
         lights_outer = QVBoxLayout()
         lights_outer.setContentsMargins(5, 5, 5, 5)
         lights_outer.setSpacing(5)
@@ -382,10 +383,10 @@ class LightingSettingsTab(QWidget, SliderGroupMixin):
         lights_outer.addLayout(self._geometry_tab_layout)
         lights_outer.addStretch()
 
-        #self.tab_widget.addTab(lights_tab, "Lights")
+        # self.tab_widget.addTab(lights_tab, "Lights")
 
-        #layout.addWidget(self.tab_widget)
-        #self.setLayout(layout)
+        # layout.addWidget(self.tab_widget)
+        # self.setLayout(layout)
 
     _RGB_KEYS = frozenset({"R", "G", "B"})
 
@@ -426,7 +427,7 @@ class LightingSettingsTab(QWidget, SliderGroupMixin):
                     slider_config=group_def.slider_config,
                     default_values=group_def.default_values,
                     step_size=group_def.step_size,
-                    callback=self._on_slider_changed
+                    callback=self._on_slider_changed,
                 )
 
     @pyqtSlot(list)

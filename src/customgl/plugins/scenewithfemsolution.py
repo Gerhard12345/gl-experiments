@@ -108,7 +108,6 @@ class SceneWithFemSolution(Scene):
         self.objects.append(mesh)
 
 
-
 class SceneWithInstancedFemSolution(Scene):
     def __init__(self):
         super(SceneWithInstancedFemSolution, self).__init__()
@@ -119,8 +118,11 @@ class SceneWithInstancedFemSolution(Scene):
         self.selected_triangle_index = 400
         highlight_data[self.selected_triangle_index, :] = 1.0
 
-        instanced_fem_mesh = InstancedObject3d(helper, data = [vertices, trigs, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances = len(mesh.trigs))
-        self.instanced_objects.append(instanced_fem_mesh)        
+        instanced_fem_mesh = InstancedObject3d(
+            helper, data=[vertices, trigs, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances=len(mesh.trigs)
+        )
+        self.instanced_objects.append(instanced_fem_mesh)
         self.num_triangles = len(mesh.trigs)
+
     def select_triangle(self, triangle_index: int):
         self.selected_triangle_index = triangle_index

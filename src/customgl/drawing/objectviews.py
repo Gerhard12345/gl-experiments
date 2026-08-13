@@ -10,6 +10,7 @@ from .shader import Shader
 from ..objects.objects3d import Object3d, InstancedObject3d
 from ..scenes.scene import Scene
 
+
 class InstancedBuffer:
     def __init__(self):
         self.ssbo: List[int] = None

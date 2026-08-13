@@ -280,6 +280,7 @@ class RGBRendererWithMeshLines(RGBRenderer):
         )
         self.shader = shader
 
+
 class RGBRendererWithMeshLinesIndexed(RGBRenderer):
     def initialize(self):
         self.framebuffer = CustomFrameBuffer.with_rgb_and_depth()
@@ -287,13 +288,13 @@ class RGBRendererWithMeshLinesIndexed(RGBRenderer):
         shader.add_define("N_DIRECTIONAL_LIGHTS", self.n_directional_lights)
         shader.add_define("N_POINT_LIGHTS", self.n_point_lights)
         shader.compile_shader(
-            self.shader_directory / "main_highlighting_triangle_bounds_indexed.vert", self.shader_directory / "main_highlighting_triangle_bounds_indexed.frag"
+            self.shader_directory / "main_highlighting_triangle_bounds_indexed.vert",
+            self.shader_directory / "main_highlighting_triangle_bounds_indexed.frag",
         )
         self.shader = shader
 
         self.compute_shader = Shader()
         self.compute_shader.compile_shader(compute_code_file=self.shader_directory / "compute_mark_triangle.comp")
-
 
     def render(self, scene_view: SceneView, lights: Lights = None):
         self.compute_shader.use()
@@ -301,4 +302,3 @@ class RGBRendererWithMeshLinesIndexed(RGBRenderer):
         GL.glDispatchCompute(1, 1, 1)
         GL.glMemoryBarrier(GL.GL_SHADER_STORAGE_BARRIER_BIT)
         super().render(scene_view, lights)
-

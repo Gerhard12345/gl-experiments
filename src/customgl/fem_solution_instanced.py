@@ -48,7 +48,7 @@ from .guielements.tabview import (
     TabbedPanel,
     TriangleSelectionTab,
     CameraSettingsTab,
-    LightingSettingsTab
+    LightingSettingsTab,
 )
 from .converters.lightsettingsconverter import LightSettingsConverter
 from .drawing.lights import Lights
@@ -142,7 +142,9 @@ class GLWidget(QOpenGLWidget):
         """Initialize the renderers and begin scene preparation."""
         self.shadow_renderer = ShadowRenderer(n_lights=self.light_config.num_directional_lights)
         self.point_shadow_renderer = PointShadowRenderer(n_lights=self.light_config.num_point_lights)
-        self.rgb_renderer = RGBRendererWithMeshLinesIndexed(n_lights=(self.light_config.num_directional_lights, self.light_config.num_point_lights))
+        self.rgb_renderer = RGBRendererWithMeshLinesIndexed(
+            n_lights=(self.light_config.num_directional_lights, self.light_config.num_point_lights)
+        )
 
         self.shadow_renderer.initialize()
         self.rgb_renderer.initialize()
@@ -428,11 +430,11 @@ class MyQWidget(QWidget):
 
         # RIGHT COLUMN (Column 2)
         right_panel = TabbedPanel()
-        #lighting_panel = LightingControlPanel()
+        # lighting_panel = LightingControlPanel()
         self.mesh_selection_panel = TriangleSelectionTab()
         self.light_settings_tab = LightingSettingsTab()
         self.camera_settings_tab = CameraSettingsTab()
-        #self.gl.set_mesh_selection_panel(self.mesh_selection_panel)
+        # self.gl.set_mesh_selection_panel(self.mesh_selection_panel)
         right_panel.add_tab(self.light_settings_tab, "Lights")
         right_panel.add_tab(self.camera_settings_tab, "Camera")
         right_panel.add_tab(self.mesh_selection_panel, "Mesh")

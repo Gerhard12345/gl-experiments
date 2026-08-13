@@ -5,9 +5,9 @@
         "light_properties": {
             "Color": {
                 "default_values": [
-                    128,
-                    128,
-                    128
+                    0,
+                    0,
+                    0
                 ]
             }
         }
@@ -18,16 +18,16 @@
         "light_properties": {
             "Diffuse": {
                 "default_values": [
-                    255,
-                    255,
-                    255
+                    0,
+                    0,
+                    0
                 ]
             },
             "Specular": {
                 "default_values": [
-                    255,
-                    255,
-                    255
+                    0,
+                    0,
+                    0
                 ]
             },
             "Direction": {
@@ -60,16 +60,16 @@
         "light_properties": {
             "Diffuse": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Specular": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Position": {
@@ -88,9 +88,9 @@
                     ]
                 },
                 "default_values": [
-                    -15,
-                    -1,
-                    -15
+                    -17,
+                    12,
+                    -17
                 ],
                 "step_size": 0.1
             }
@@ -102,16 +102,16 @@
         "light_properties": {
             "Diffuse": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Specular": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Position": {
@@ -130,9 +130,9 @@
                     ]
                 },
                 "default_values": [
-                    -15,
-                    -1,
-                    15
+                    -17,
+                    12,
+                    17
                 ],
                 "step_size": 0.1
             }
@@ -144,16 +144,16 @@
         "light_properties": {
             "Diffuse": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Specular": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Position": {
@@ -172,9 +172,9 @@
                     ]
                 },
                 "default_values": [
-                    15,
-                    1,
-                    -15
+                    17,
+                    12,
+                    -17
                 ],
                 "step_size": 0.1
             }
@@ -186,16 +186,16 @@
         "light_properties": {
             "Diffuse": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Specular": {
                 "default_values": [
-                    0,
-                    0,
-                    0
+                    230,
+                    230,
+                    230
                 ]
             },
             "Position": {
@@ -214,9 +214,51 @@
                     ]
                 },
                 "default_values": [
-                    15,
-                    1,
-                    15
+                    17,
+                    12,
+                    17
+                ],
+                "step_size": 0.1
+            }
+        }
+    },
+    {
+        "name": "Point 5",
+        "type": "Point",
+        "light_properties": {
+            "Diffuse": {
+                "default_values": [
+                    230,
+                    230,
+                    230
+                ]
+            },
+            "Specular": {
+                "default_values": [
+                    230,
+                    230,
+                    230
+                ]
+            },
+            "Position": {
+                "ranges": {
+                    "x": [
+                        -18,
+                        18
+                    ],
+                    "y": [
+                        -3,
+                        12
+                    ],
+                    "z": [
+                        -18,
+                        18
+                    ]
+                },
+                "default_values": [
+                    0,
+                    3,
+                    0
                 ],
                 "step_size": 0.1
             }

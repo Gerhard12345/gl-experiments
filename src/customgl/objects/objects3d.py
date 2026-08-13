@@ -73,6 +73,7 @@ class VertexBufferBasedMixin:
     def get_indices(self) -> NDArray[np.float32]:
         return self._indices
 
+
 class InstancedBufferBasedMixin:
     def get_data(self):
         return self._data
@@ -86,6 +87,7 @@ class InstancedBufferBasedMixin:
     def set_num_instances(self, num_instances: int):
         self._num_instances = num_instances
 
+
 class Object3d(RotateMixin, LocalRotateMixin, ScaleMixin, TranslateMixin, DynamicsMixin, VertexBufferBasedMixin):
     def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
         self.position = position
@@ -97,8 +99,9 @@ class Object3d(RotateMixin, LocalRotateMixin, ScaleMixin, TranslateMixin, Dynami
         self.modelmat = np.matrix(np.identity(4))
         self.cull_face = True
 
+
 class InstancedObject3d(InstancedBufferBasedMixin):
-    def __init__(self, base_object: Object3d, data:List[NDArray[np.float32]], gpu_index: List[int], instances: int):
+    def __init__(self, base_object: Object3d, data: List[NDArray[np.float32]], gpu_index: List[int], instances: int):
         self.baseobject = base_object
         self._data = data
         self._gpu_index = gpu_index
@@ -195,8 +198,8 @@ class Trig(Object3d):
             [
                 # positions      normal          uv        tangent        bitangent
                 [-1.0, -1.0, 0.0, *normal, 0.0, 0.0, *tangent, *bitangent],
-                [ 1.0, -1.0, 0.0, *normal, 1.0, 0.0, *tangent, *bitangent],
-                [ 0.0,  1.0, 0.0, *normal, 0.5, 1.0, *tangent, *bitangent],
+                [1.0, -1.0, 0.0, *normal, 1.0, 0.0, *tangent, *bitangent],
+                [0.0, 1.0, 0.0, *normal, 0.5, 1.0, *tangent, *bitangent],
             ],
             dtype=np.float32,
         )
