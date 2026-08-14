@@ -103,8 +103,6 @@ class InstancedBuffer:
         GL.glBufferSubData(GL.GL_SHADER_STORAGE_BUFFER, offset, rows.nbytes, rows)
         self._buffer_data[buffer_index][start_index : start_index + count] = rows
 
-    
-
 
 class VertexBuffer:
     def __init__(self):
@@ -185,7 +183,9 @@ class InstancedView:
 
     def draw(self, cull_face: bool):
         if self.instanced_data.shall_update:
-            self.instanced_buffer.replace_buffer_element(self.instanced_data.buffer_index, self.instanced_data.element_index, self.instanced_data.values)
+            self.instanced_buffer.replace_buffer_element(
+                self.instanced_data.buffer_index, self.instanced_data.element_index, self.instanced_data.values
+            )
             self.instanced_buffer.shall_update = False
         if cull_face:
             GL.glEnable(GL.GL_CULL_FACE)

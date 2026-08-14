@@ -118,7 +118,6 @@ class InstancedObject3d(InstancedBufferBasedMixin):
         self.shall_update = True
 
 
-
 class Cube(Object3d):
     def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
         super().__init__(position=position, material=material, scale=scale)

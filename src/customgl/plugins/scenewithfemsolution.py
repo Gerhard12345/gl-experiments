@@ -57,7 +57,6 @@ def generate_vertices():
         for li in coordinates_of_trigs
     ]
 
-
     return vertices, mesh
 
     # laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
@@ -128,7 +127,7 @@ class SceneWithInstancedFemSolution(Scene):
         self.num_triangles = len(mesh.trigs)
 
     def select_triangle(self, triangle_index: int):
-        buffer_data = [np.array([0,0,0,0]).astype(np.float32), np.array([1,1,1,1]).astype(np.float32)]
+        buffer_data = [np.array([0, 0, 0, 0]).astype(np.float32), np.array([1, 1, 1, 1]).astype(np.float32)]
         element_indices = [self.selected_triangle_index, triangle_index]
         buffer_indices = [3, 3]
         self.instanced_objects[0].update_buffer_data(buffer_indices, element_indices, buffer_data)
