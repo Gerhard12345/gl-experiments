@@ -56,8 +56,9 @@ def generate_vertices():
         ]
         for li in coordinates_of_trigs
     ]
+
+
     return vertices, mesh
-    # space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
 
     # laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
     # bilinearform = BilinearForm([laplace])
@@ -97,6 +98,8 @@ def generate_vertices_and_trigs():
     edge_indices = np.array([edge.points for edge in mesh.edges], dtype=np.uint32)
     edges = np.zeros((len(mesh.edges), 3), dtype=np.uint32)
     edges[:, :2] = edge_indices
+    order = 3
+    space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
     return vertices, trigs, edges, mesh
 
 
@@ -125,4 +128,8 @@ class SceneWithInstancedFemSolution(Scene):
         self.num_triangles = len(mesh.trigs)
 
     def select_triangle(self, triangle_index: int):
+        buffer_data = [np.array([0,0,0,0]).astype(np.float32), np.array([1,1,1,1]).astype(np.float32)]
+        element_indices = [self.selected_triangle_index, triangle_index]
+        buffer_indices = [3, 3]
+        self.instanced_objects[0].update_buffer_data(buffer_indices, element_indices, buffer_data)
         self.selected_triangle_index = triangle_index

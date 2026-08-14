@@ -299,6 +299,7 @@ class RGBRendererWithMeshLinesIndexed(RGBRenderer):
     def render(self, scene_view: SceneView, lights: Lights = None):
         self.compute_shader.use()
         self.compute_shader.set_int(scene_view.scene.selected_triangle_index, "selectedTriangleIndex")
+        
         GL.glDispatchCompute(1, 1, 1)
         GL.glMemoryBarrier(GL.GL_SHADER_STORAGE_BARRIER_BIT)
         super().render(scene_view, lights)

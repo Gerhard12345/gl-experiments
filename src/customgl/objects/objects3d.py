@@ -106,9 +106,17 @@ class InstancedObject3d(InstancedBufferBasedMixin):
         self._data = data
         self._gpu_index = gpu_index
         self._num_instances = instances
+        self.shall_update = False
 
     def set_instances(self, instances: int):
         self.num_instances = instances
+
+    def update_buffer_data(self, buffer_index: List[int], element_index: List[int], values: List[NDArray[np.generic]]):
+        self.buffer_index = buffer_index
+        self.element_index = element_index
+        self.values = values
+        self.shall_update = True
+
 
 
 class Cube(Object3d):
