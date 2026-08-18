@@ -90,16 +90,24 @@ def generate_vertices_and_trigs():
     doubleslit = DoubleSlitGeometry()
     mesh = generate_mesh(doubleslit, max_gradient=0.75)
 
-    vertices = np.array([point.coordinates for point in mesh.points], dtype=np.float32)
+    vertices = np.array([np.hstack([point.coordinates,np.array([0,1.0])]) for point in mesh.points], dtype=np.float32)
     trig_indices = np.array([trig.points for trig in mesh.trigs], dtype=np.uint32)
+    trig_edge_indices = np.array([trig.edges for trig in mesh.trigs], dtype=np.uint32)
     trigs = np.zeros((len(mesh.trigs), 4), dtype=np.uint32)
     trigs[:, :3] = trig_indices
+    trigs_regions = np.zeros((len(mesh.trigs), 4), dtype=np.uint32)
+    trigs_regions[:, 0] = np.array([trig.region for trig in mesh.trigs], dtype=np.uint32)
+    trigs_edges = np.ones((len(mesh.trigs), 4), dtype=np.uint32)
+    trigs_edges[:, :3] = trig_edge_indices
+
     edge_indices = np.array([edge.points for edge in mesh.edges], dtype=np.uint32)
-    edges = np.zeros((len(mesh.edges), 3), dtype=np.uint32)
+    edges = np.ones((len(mesh.edges), 4), dtype=np.uint32)
     edges[:, :2] = edge_indices
+    edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
+    edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
     order = 3
     space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
-    return vertices, trigs, edges, mesh
+    return vertices, trigs, edges, trigs_edges, trigs_regions, mesh
 
 
 class SceneWithFemSolution(Scene):
@@ -113,15 +121,19 @@ class SceneWithFemSolution(Scene):
 class SceneWithInstancedFemSolution(Scene):
     def __init__(self):
         super(SceneWithInstancedFemSolution, self).__init__()
-        vertices, trigs, edges, mesh = generate_vertices_and_trigs()
+        vertices, trigs, edges, trigs_edges, trigs_regions, mesh = generate_vertices_and_trigs()
         helper = Trig(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
 
         highlight_data = np.zeros((len(trigs), 4), dtype=np.float32)
         self.selected_triangle_index = 400
         highlight_data[self.selected_triangle_index, :] = 1.0
 
+        grouped_data = np.zeros((len(trigs), 12), dtype=np.uint32)
+        grouped_data[:,:4] = trigs
+        grouped_data[:,4:8] = trigs_regions
+        grouped_data[:,8:] = trigs_edges
         instanced_fem_mesh = InstancedObject3d(
-            helper, data=[vertices, trigs, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances=len(mesh.trigs)
+            helper, data=[vertices, grouped_data, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances=len(mesh.trigs)
         )
         self.instanced_objects.append(instanced_fem_mesh)
         self.num_triangles = len(mesh.trigs)
