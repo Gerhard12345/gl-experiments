@@ -12,9 +12,20 @@ struct Edge {
     uint region;
 };
 
+struct Point {
+    vec4 position;
+    float is_boundary;
+};
+
 in vec3 vBarycentric;
 flat in uint vVertexIndex;
 flat in uint vTriangleIndex;
+
+
+// Speicherpuffer für die globalen FEM-Knotenkoordinaten
+layout(std430, binding = 0) readonly buffer NodeBuffer {
+    Point nodes[];
+};
 
 // Triangle Buffer
 layout(std430, binding = 1) readonly buffer TriangleBuffer {
@@ -43,6 +54,18 @@ float edgeFactor(float w) {
     return min(min(a3.x, a3.y), a3.z);
 }
 
+int argmin(vec3 values) {
+    if (values.x <= values.y && values.x <= values.z) return 0;
+    if (values.y <= values.z) return 1;
+    return 2;
+}
+
+int argmax(vec3 values) {
+    if (values.x >= values.y && values.x >= values.z) return 0;
+    if (values.y >= values.z) return 1;
+    return 2;
+}
+
 void main() {
     float w = 0.85; // Breite der Kante in Bildschirmkoordinaten
     float thickness = edgeFactor(w);
@@ -57,34 +80,18 @@ void main() {
     // Sonderlogik basierend auf dem Highlight-Buffer:
     if (highlights[vTriangleIndex].x > 0.5) {
         faceColor = vec4(0.8, 0.15, 0.15, 1.0);
-    }
-    uint edge;
+    }    
     bool found = false;
-    if (vBarycentric.x <= 0.1)
+    int min_barycentric = argmin(vBarycentric);
+    int max_barycentric = argmax(vBarycentric);
+    uint is_boundary_edge = edges[trigs[vTriangleIndex].edges[min_barycentric]].is_boundary;
+    float is_boundary_point = nodes[trigs[vTriangleIndex].points[max_barycentric]].is_boundary;
+    if ((vBarycentric[min_barycentric] <= 0.15 &&  (is_boundary_edge == 1)) ||
+        (vBarycentric[max_barycentric] >= 0.99 &&  (is_boundary_point == 1)))
     {
-        edge = trigs[vTriangleIndex].edges.y;
-        if (edges[edge].is_boundary == 1)
-            found = true;
-    }
-    if (vBarycentric.y <= 0.1)
-    {
-        edge = trigs[vTriangleIndex].edges.z;
-        if (edges[edge].is_boundary == 1)
-            found = true;
-    }
-    if (vBarycentric.z <= 0.1)
-    {
-        edge = trigs[vTriangleIndex].edges.x;
-        if (edges[edge].is_boundary == 1)
-            found = true;
-    }
+        thickness = edgeFactor(7);
+        lineColor = vec4(0,0,1,1);
 
-    if (found == true)
-    {
-//        {
-            thickness = edgeFactor(5);
-            lineColor = vec4(1,0,0,1);
-//        }
     }
     // Mischen der Farben: nahe an der Kante dominiert lineColor
     fragColor = mix(lineColor, faceColor, thickness);

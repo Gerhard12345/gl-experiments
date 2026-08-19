@@ -12,10 +12,14 @@ struct Edge {
     uint region;
 };
 
+struct Point {
+    vec4 position;
+    float is_boundary;
+};
 
 // Speicherpuffer für die globalen FEM-Knotenkoordinaten
 layout(std430, binding = 0) readonly buffer NodeBuffer {
-    vec4 nodes[];
+    Point nodes[];
 };
 
 // Triangle Buffer
@@ -54,6 +58,6 @@ void main() {
     vTriangleIndex = uint(gl_InstanceID);
     // Globalen Vertex-Index glatt an den Fragment-Shader durchreichen, wozu?
     vVertexIndex = nodeIndex;
-    vec4 position = nodes[nodeIndex];
+    vec4 position = nodes[nodeIndex].position;
     gl_Position = u_projection_mat*u_view_mat*u_model_mat*position;
 }

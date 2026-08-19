@@ -90,7 +90,9 @@ def generate_vertices_and_trigs():
     doubleslit = DoubleSlitGeometry()
     mesh = generate_mesh(doubleslit, max_gradient=0.75)
 
-    vertices = np.array([np.hstack([point.coordinates,np.array([0,1.0])]) for point in mesh.points], dtype=np.float32)
+    vertices = np.array(
+        [np.hstack([point.coordinates, np.array([0, 1.0, point.is_boundary_point, 0, 0, 0])]) for point in mesh.points], dtype=np.float32
+    )
     trig_indices = np.array([trig.points for trig in mesh.trigs], dtype=np.uint32)
     trig_edge_indices = np.array([trig.edges for trig in mesh.trigs], dtype=np.uint32)
     trigs = np.zeros((len(mesh.trigs), 4), dtype=np.uint32)
@@ -129,9 +131,9 @@ class SceneWithInstancedFemSolution(Scene):
         highlight_data[self.selected_triangle_index, :] = 1.0
 
         grouped_data = np.zeros((len(trigs), 12), dtype=np.uint32)
-        grouped_data[:,:4] = trigs
-        grouped_data[:,4:8] = trigs_regions
-        grouped_data[:,8:] = trigs_edges
+        grouped_data[:, :4] = trigs
+        grouped_data[:, 4:8] = trigs_regions
+        grouped_data[:, 8:] = trigs_edges
         instanced_fem_mesh = InstancedObject3d(
             helper, data=[vertices, grouped_data, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances=len(mesh.trigs)
         )
