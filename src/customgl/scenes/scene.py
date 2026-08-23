@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 import numpy as np
-from customgl import Quad, Object3d, InstancedObject3d
+from customgl import Quad, Object3d, InstancedObject3d, ShaderStorageObjectData
 from customgl import Material
 
 
@@ -25,6 +25,7 @@ class Scene:
         self.n_lights = 4
         self.objects: List[Object3d] = []
         self.instanced_objects: List[InstancedObject3d] = []
+        self.ssods: List[ShaderStorageObjectData] = []
 
     def update(self):
         for current_object in self.objects:

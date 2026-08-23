@@ -7,7 +7,7 @@ struct Trig {
 };
 
 struct Edge {
-    uvec2 Points;
+    uvec2 points;
     uint is_boundary;
     uint region;
 };
@@ -16,6 +16,9 @@ struct Point {
     vec4 position;
     float is_boundary;
 };
+
+
+uniform int n_vertices;
 
 // Speicherpuffer für die globalen FEM-Knotenkoordinaten
 layout(std430, binding = 0) readonly buffer NodeBuffer {
@@ -32,10 +35,17 @@ layout(std430, binding = 2) readonly buffer EdgeBuffer {
     Edge edges[];
 };
 
+// Speicherpuffer für die Element-Konnektivität (Dreiecke)
+layout(std430, binding = 4) readonly buffer BoundaryEdgesBuffer {
+    uint boundary_edges[];
+};
+
+
 // Ausgabevariablen für den Fragment-Shader
 out vec3 vBarycentric;
-flat out uint vVertexIndex;
+out vec2 vBarycentricLine;
 flat out uint vTriangleIndex;
+flat out uint vEdgeIndex;
 
 uniform mat4 u_projection_mat;
 uniform mat4 u_model_mat;
@@ -48,16 +58,31 @@ const vec3 barycentricCoords[3] = vec3[3](
       vec3(0.0, 0.0, 1.0)  // Ecke 2
 );
 
+const vec2 barycentricCoordsLine[2] = vec2[2](
+      vec2(1.0, 0.0), // Ecke 0
+      vec2(0.0, 1.0)  // Ecke 1
+);
+
+
 void main() {
-    // gl_InstanceID bestimmt, welches FEM-Element gezeichnet wird
-    // gl_vertexID den lokalen Knoten index, 0, 1, 2
-    uint nodeIndex = trigs[gl_InstanceID].points[gl_VertexID];
-    // Baryzentrische Koordinate der aktuellen Ecke zuweisen
-    vBarycentric = barycentricCoords[gl_VertexID];
+    if (n_vertices == 3)
+    {
+        // gl_InstanceID bestimmt, welches FEM-Element gezeichnet wird
+        // gl_vertexID den lokalen Knoten index, 0, 1, 2
+        vTriangleIndex = uint(gl_InstanceID);
+        uint nodeIndex = trigs[vTriangleIndex].points[gl_VertexID];
+        // Baryzentrische Koordinate der aktuellen Ecke zuweisen
+        vBarycentric = barycentricCoords[gl_VertexID];
         
-    vTriangleIndex = uint(gl_InstanceID);
-    // Globalen Vertex-Index glatt an den Fragment-Shader durchreichen, wozu?
-    vVertexIndex = nodeIndex;
-    vec4 position = nodes[nodeIndex].position;
-    gl_Position = u_projection_mat*u_view_mat*u_model_mat*position;
+        vec4 position = nodes[nodeIndex].position;
+        gl_Position = u_projection_mat*u_view_mat*u_model_mat*position;
+    }
+    else
+    {
+        vEdgeIndex = boundary_edges[uint(gl_InstanceID)];
+        uint nodeIndex = edges[vEdgeIndex].points[gl_VertexID];
+        vBarycentricLine = barycentricCoordsLine[gl_VertexID];
+        vec4 position = nodes[nodeIndex].position;
+        gl_Position = u_projection_mat*u_view_mat*u_model_mat*position;
+    }
 }

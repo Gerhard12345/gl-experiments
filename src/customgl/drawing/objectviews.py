@@ -7,7 +7,7 @@ from OpenGL import GL
 
 from .glmaterial import GLMaterial
 from .shader import Shader
-from ..objects.objects3d import Object3d, InstancedObject3d
+from ..objects.objects3d import Object3d, InstancedObject3d, ShaderStorageObjectData
 from ..scenes.scene import Scene
 
 
@@ -176,17 +176,10 @@ class InstancedView:
         self.baseobject = instanced_data.baseobject
         self.buffer = VertexBuffer()
         self.buffer.upload_data_to_gpu(vertices=self.baseobject.get_vertices(), indices=self.baseobject.get_indices())
-        self.instanced_buffer = InstancedBuffer()
-        self.instanced_buffer.upload_data_to_gpu(data=instanced_data.get_data(), gpu_index=instanced_data.get_gpu_index())
         self.material = GLMaterial(material=self.baseobject.material)
-        self.element_type = GL.GL_TRIANGLES
+        self.element_type = GL.GL_LINES if self.baseobject.is_line else GL.GL_TRIANGLES
 
     def draw(self, cull_face: bool):
-        if self.instanced_data.shall_update:
-            self.instanced_buffer.replace_buffer_element(
-                self.instanced_data.buffer_index, self.instanced_data.element_index, self.instanced_data.values
-            )
-            self.instanced_buffer.shall_update = False
         if cull_face:
             GL.glEnable(GL.GL_CULL_FACE)
             GL.glCullFace(GL.GL_BACK)
@@ -194,18 +187,39 @@ class InstancedView:
             GL.glDisable(GL.GL_CULL_FACE)
         with self.buffer:
             with self.material:
+                GL.glLineWidth(5.0)
                 GL.glDrawArraysInstanced(self.element_type, 0, self.baseobject.get_n_vertices(), self.instanced_data.get_num_instances())
         GL.glDisable(GL.GL_CULL_FACE)
+
+
+class InstancedBufferView:
+    def __init__(self, ssod: ShaderStorageObjectData):
+        # Initiate texture
+        self.instanced_data = ssod
+        self.instanced_buffer = InstancedBuffer()
+        self.instanced_buffer.upload_data_to_gpu(data=ssod.get_data(), gpu_index=ssod.get_gpu_index())
+
+    def update(self):
+        if self.instanced_data.shall_update:
+            self.instanced_buffer.replace_buffer_element(
+                self.instanced_data.buffer_index, self.instanced_data.element_index, self.instanced_data.values
+            )
+            self.instanced_buffer.shall_update = False
 
 
 class SceneView:
     def __init__(self, scene: Scene):
         self.scene = scene
+        self.shader_storage_object_buffers = [InstancedBufferView(ssod) for ssod in scene.ssods]
         self.viewable_objects = [View(object) for object in scene.objects]
         self.viewable_objects.extend([InstancedView(instanced_object) for instanced_object in scene.instanced_objects])
 
     def draw(self, shader: Shader, cull_face=False):
+        for current_buffer in self.shader_storage_object_buffers:
+            current_buffer.update()
         for current_object in self.viewable_objects:
             modelmat = current_object.baseobject.modelmat
             shader.set_modelmat(modelmat.astype(np.float32))
+            n_vertices = 2 if current_object.baseobject.is_line else 3
+            shader.set_int(n_vertices, "n_vertices")
             current_object.draw(cull_face=current_object.baseobject.cull_face)

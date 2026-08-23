@@ -74,18 +74,20 @@ class VertexBufferBasedMixin:
         return self._indices
 
 
-class InstancedBufferBasedMixin:
-    def get_data(self):
-        return self._data
-
-    def get_gpu_index(self):
-        return self._gpu_index
-
+class InstancedBufferBaseMixin:
     def get_num_instances(self):
         return self._num_instances
 
     def set_num_instances(self, num_instances: int):
         self._num_instances = num_instances
+
+
+class ShaderStorageObjectDataBaseMixin:
+    def get_data(self):
+        return self._data
+
+    def get_gpu_index(self):
+        return self._gpu_index
 
 
 class Object3d(RotateMixin, LocalRotateMixin, ScaleMixin, TranslateMixin, DynamicsMixin, VertexBufferBasedMixin):
@@ -98,24 +100,27 @@ class Object3d(RotateMixin, LocalRotateMixin, ScaleMixin, TranslateMixin, Dynami
         self.dynamics = np.matrix(np.identity(4))
         self.modelmat = np.matrix(np.identity(4))
         self.cull_face = True
+        self.is_line = False
 
 
-class InstancedObject3d(InstancedBufferBasedMixin):
-    def __init__(self, base_object: Object3d, data: List[NDArray[np.float32]], gpu_index: List[int], instances: int):
-        self.baseobject = base_object
+class ShaderStorageObjectData(ShaderStorageObjectDataBaseMixin):
+    def __init__(self, data: List[NDArray[np.float32]], gpu_index: List[int]):
         self._data = data
         self._gpu_index = gpu_index
-        self._num_instances = instances
         self.shall_update = False
-
-    def set_instances(self, instances: int):
-        self.num_instances = instances
 
     def update_buffer_data(self, buffer_index: List[int], element_index: List[int], values: List[NDArray[np.generic]]):
         self.buffer_index = buffer_index
         self.element_index = element_index
         self.values = values
         self.shall_update = True
+
+
+class InstancedObject3d(InstancedBufferBaseMixin):
+    def __init__(self, base_object: Object3d, instances: int):
+        self.baseobject = base_object
+        self._num_instances = instances
+        self.shall_update = False
 
 
 class Cube(Object3d):
@@ -213,6 +218,26 @@ class Trig(Object3d):
         _nvertices = 3
         self._indices = np.array([range(0, _nvertices)], dtype=np.uint32)
         self.scale(scale).translate(position)
+
+
+class Line(Object3d):
+    def __init__(self, position: NDArray[np.float32], material: Material, scale: NDArray[np.float32]):
+        super().__init__(position=position, material=material, scale=scale)
+        tangent = [1, 0, 0]
+        bitangent = [0, 1, 0]
+        normal = [0, 0, -1]
+        self._vertices = np.array(
+            [
+                # positions      normal          uv        tangent        bitangent
+                [-1.0, 0.0, 0.0, *normal, 0.0, 0.0, *tangent, *bitangent],
+                [1.0, 0.0, 0.0, *normal, 1.0, 0.0, *tangent, *bitangent],
+            ],
+            dtype=np.float32,
+        )
+        _nvertices = 2
+        self._indices = np.array([range(0, _nvertices)], dtype=np.uint32)
+        self.scale(scale).translate(position)
+        self.is_line = True
 
 
 class Ikosaeder(Object3d):

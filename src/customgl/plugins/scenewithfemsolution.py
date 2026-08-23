@@ -5,7 +5,8 @@ from customgl import Scene
 import numpy as np
 from customgl import MeshedSurfaceWithNormalOffset, MeshedSurfaceWall
 from customgl import RoomDefinition, build_room
-from customgl import Object3d, InstancedObject3d, Trig
+from customgl import Object3d, InstancedObject3d, Trig, ShaderStorageObjectData
+from customgl import Line as glLine
 from customgl import InstancedBuffer, Shader
 
 from customgl import (
@@ -108,8 +109,9 @@ def generate_vertices_and_trigs():
     edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
     edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
     order = 3
+    boundary_edges = np.array([boundary_edge.global_edge_nr for boundary_edge in mesh.boundary_edges], dtype=np.uint32)
     space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
-    return vertices, trigs, edges, trigs_edges, trigs_regions, mesh
+    return vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh
 
 
 class SceneWithFemSolution(Scene):
@@ -123,7 +125,7 @@ class SceneWithFemSolution(Scene):
 class SceneWithInstancedFemSolution(Scene):
     def __init__(self):
         super(SceneWithInstancedFemSolution, self).__init__()
-        vertices, trigs, edges, trigs_edges, trigs_regions, mesh = generate_vertices_and_trigs()
+        vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh = generate_vertices_and_trigs()
         helper = Trig(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
 
         highlight_data = np.zeros((len(trigs), 4), dtype=np.float32)
@@ -134,15 +136,19 @@ class SceneWithInstancedFemSolution(Scene):
         grouped_data[:, :4] = trigs
         grouped_data[:, 4:8] = trigs_regions
         grouped_data[:, 8:] = trigs_edges
-        instanced_fem_mesh = InstancedObject3d(
-            helper, data=[vertices, grouped_data, edges, highlight_data], gpu_index=[0, 1, 2, 3], instances=len(mesh.trigs)
-        )
+        ssod = ShaderStorageObjectData(data=[vertices, grouped_data, edges, highlight_data, boundary_edges], gpu_index=[0, 1, 2, 3, 4])
+        instanced_fem_mesh = InstancedObject3d(helper, instances=len(mesh.trigs))
         self.instanced_objects.append(instanced_fem_mesh)
+        self.ssods.append(ssod)
         self.num_triangles = len(mesh.trigs)
+
+        helper_line = glLine(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
+        instanced_fem_mesh_lines = InstancedObject3d(helper_line, instances=len(mesh.boundary_edges))
+        self.instanced_objects.append(instanced_fem_mesh_lines)
 
     def select_triangle(self, triangle_index: int):
         buffer_data = [np.array([0, 0, 0, 0]).astype(np.float32), np.array([1, 1, 1, 1]).astype(np.float32)]
         element_indices = [self.selected_triangle_index, triangle_index]
         buffer_indices = [3, 3]
-        self.instanced_objects[0].update_buffer_data(buffer_indices, element_indices, buffer_data)
+        self.ssods[0].update_buffer_data(buffer_indices, element_indices, buffer_data)
         self.selected_triangle_index = triangle_index

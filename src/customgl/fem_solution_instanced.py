@@ -210,24 +210,24 @@ class GLWidget(QOpenGLWidget):
             return
         GL.glEnable(GL.GL_TEXTURE_CUBE_MAP_SEAMLESS)
         GL.glEnable(GL.GL_DEPTH_TEST)
-        self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
-            shader=self.point_shadow_renderer.shader, omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer
-        )
-        self.point_shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
-        self.common_shader_data.prepare_directional_shader_with_transformations(
-            shader=self.shadow_renderer.shader, directional_shadows_framebuffer=self.shadow_renderer.framebuffer
-        )
-        self.shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
+        # self.common_shader_data.prepare_omnidirectional_shader_with_transformations(
+        #     shader=self.point_shadow_renderer.shader, omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer
+        # )
+        # self.point_shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
+        # self.common_shader_data.prepare_directional_shader_with_transformations(
+        #     shader=self.shadow_renderer.shader, directional_shadows_framebuffer=self.shadow_renderer.framebuffer
+        # )
+        # self.shadow_renderer.render(scene_view=self.scene_view, lights=self.lights)
         self.opengl_camera.update_camera_matrices_in_shader(
             shader=self.rgb_renderer.shader,
             viewing_width=self.rgb_renderer.width,
             viewing_height=self.rgb_renderer.height,
         )
-        self.common_shader_data.prepare_rgb_shader_with_transformations_and_depth_maps(
-            shader=self.rgb_renderer.shader,
-            directional_shadow_framebuffer=self.shadow_renderer.framebuffer,
-            omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer,
-        )
+        # self.common_shader_data.prepare_rgb_shader_with_transformations_and_depth_maps(
+        #     shader=self.rgb_renderer.shader,
+        #     directional_shadow_framebuffer=self.shadow_renderer.framebuffer,
+        #     omnidirectional_shadows_framebuffer=self.point_shadow_renderer.framebuffer,
+        # )
         self.rgb_renderer.render(scene_view=self.scene_view, lights=self.lights)
         GL.glDisable(GL.GL_DEPTH_TEST)
         GL.glDisable(GL.GL_CULL_FACE)
