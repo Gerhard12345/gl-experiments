@@ -175,7 +175,7 @@ class PointShadowRenderer(Renderer):
             self.framebuffer.bind()
             GL.glEnable(GL.GL_CULL_FACE)
             GL.glCullFace(GL.GL_BACK)
-            scene_view.draw(self.shader, cull_face=True, include_lines=False)
+            scene_view.draw(self.shader, cull_face=True)
             GL.glDisable(GL.GL_CULL_FACE)
 
     def set_size(self, width: int, height: int):

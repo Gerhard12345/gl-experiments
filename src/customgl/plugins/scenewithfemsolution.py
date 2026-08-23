@@ -60,16 +60,16 @@ def generate_vertices():
 
     return vertices, mesh
 
-    # laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
-    # bilinearform = BilinearForm([laplace])
-    # linearform = LinearForm([])
+    laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
+    bilinearform = BilinearForm([laplace])
+    linearform = LinearForm([])
 
     # set boundary values
-    # u = space.create_gridfunction()
-    # set_boundary_values(u, space, g)
+    u = space.create_gridfunction()
+    set_boundary_values(u, space, g)
 
-    # solve_bvp(bilinearform, linearform, u, space)
-    # ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
+    solve_bvp(bilinearform, linearform, u, space)
+    #ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
 
 
 class FemMesh(Object3d):
@@ -108,10 +108,24 @@ def generate_vertices_and_trigs():
     edges[:, :2] = edge_indices
     edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
     edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
-    order = 3
+    order = 1
     boundary_edges = np.array([boundary_edge.global_edge_nr for boundary_edge in mesh.boundary_edges], dtype=np.uint32)
     space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
-    return vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh
+    laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
+    bilinearform = BilinearForm([laplace])
+    linearform = LinearForm([])
+
+    # set boundary values
+    u = space.create_gridfunction()
+    set_boundary_values(u, space, g)
+
+    solve_bvp(bilinearform, linearform, u, space)
+    #ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
+    coefficient_vector = []
+    for i, element in enumerate(space.elements):
+        coefficient_vector.append(list(u[space.dofs[i]].flatten()))
+        coefficient_vector[-1].extend([0])
+    return vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh, coefficient_vector
 
 
 class SceneWithFemSolution(Scene):
@@ -125,7 +139,7 @@ class SceneWithFemSolution(Scene):
 class SceneWithInstancedFemSolution(Scene):
     def __init__(self):
         super(SceneWithInstancedFemSolution, self).__init__()
-        vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh = generate_vertices_and_trigs()
+        vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh, u = generate_vertices_and_trigs()
         helper = Trig(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
 
         highlight_data = np.zeros((len(trigs), 4), dtype=np.float32)
@@ -136,7 +150,19 @@ class SceneWithInstancedFemSolution(Scene):
         grouped_data[:, :4] = trigs
         grouped_data[:, 4:8] = trigs_regions
         grouped_data[:, 8:] = trigs_edges
-        ssod = ShaderStorageObjectData(data=[vertices, grouped_data, edges, highlight_data, boundary_edges], gpu_index=[0, 1, 2, 3, 4])
+
+        # coefficients = np.array([0,0,0,0] * len(mesh.trigs), dtype = np.float32)
+        # coefficients.shape = (len(mesh.trigs),4)
+        # coefficients[10,0:2] = 1
+        # coefficients = np.column_stack((u.reshape(-1,3), np.zeros([len(mesh.trigs), 1])))
+        # print(u[0])
+        # print(u[10])
+        u = np.array(u, dtype=np.float32)
+        # print(u[0])
+        # print(u[10])
+        # print(len(u))
+        # print(len(mesh.points))
+        ssod = ShaderStorageObjectData(data=[vertices, grouped_data, edges, highlight_data, boundary_edges, u], gpu_index=[0, 1, 2, 3, 4, 5])
         instanced_fem_mesh = InstancedObject3d(helper, instances=len(mesh.trigs))
         self.instanced_objects.append(instanced_fem_mesh)
         self.ssods.append(ssod)

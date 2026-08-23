@@ -24,6 +24,9 @@ flat in uint vTriangleIndex;
 
 uniform int n_vertices;
 
+const int COEFFICIENT_COUNT = 4;
+const int VEC4_COUNT = COEFFICIENT_COUNT / 4;
+
 // Speicherpuffer für die globalen FEM-Knotenkoordinaten
 layout(std430, binding = 0) readonly buffer NodeBuffer {
     Point nodes[];
@@ -44,6 +47,10 @@ layout(std430, binding = 4) readonly buffer BoundaryEdgesBuffer {
     uint boundary_edges[];
 };
 
+layout(std430, binding = 5) readonly buffer CoefficientVectorBuffer {
+    vec4 coefficient_vector[][VEC4_COUNT];
+};
+
 layout(std430, binding = 3) readonly buffer HighlightBuffer {
     vec4 highlights[];
 };
@@ -60,6 +67,17 @@ float edgeFactor(float w) {
     
     return min(min(a3.x, a3.y), a3.z);
 }
+
+vec3 jetColor(float value) {
+    float normalizedValue = clamp((value + 300.0) / 600.0, 0.0, 1.0);
+
+    return vec3(
+        clamp(1.5 - abs(4.0 * normalizedValue - 3.0), 0.0, 1.0),
+        clamp(1.5 - abs(4.0 * normalizedValue - 2.0), 0.0, 1.0),
+        clamp(1.5 - abs(4.0 * normalizedValue - 1.0), 0.0, 1.0)
+    );
+}
+
 
 
 void main() {
@@ -78,7 +96,16 @@ void main() {
         // Sonderlogik basierend auf dem Highlight-Buffer:
         if (highlights[vTriangleIndex].x > 0.5) {
             faceColor = vec4(0.8, 0.15, 0.15, 1.0);
-        }    
+        }        
+        
+        vec4 shape_vector[VEC4_COUNT];
+        shape_vector[0] = vec4(vBarycentric,0.0);
+        float scalar_product = 0.0;
+        for (int i = 0; i < VEC4_COUNT; ++i) {
+           scalar_product += dot(coefficient_vector[vTriangleIndex][i], shape_vector[i]);
+        }
+
+        faceColor = vec4(jetColor(scalar_product), 1.0);
         fragColor = mix(lineColor, faceColor, thickness);
     }
     else

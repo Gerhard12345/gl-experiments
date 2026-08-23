@@ -74,7 +74,7 @@ void main() {
         // Baryzentrische Koordinate der aktuellen Ecke zuweisen
         vBarycentric = barycentricCoords[gl_VertexID];
         
-        vec4 position = nodes[nodeIndex].position;
+        vec4 position = nodes[nodeIndex].position;        
         gl_Position = u_projection_mat*u_view_mat*u_model_mat*position;
     }
     else
