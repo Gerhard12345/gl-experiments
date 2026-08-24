@@ -108,7 +108,7 @@ def generate_vertices_and_trigs():
     edges[:, :2] = edge_indices
     edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
     edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
-    order = 1
+    order = 3
     boundary_edges = np.array([boundary_edge.global_edge_nr for boundary_edge in mesh.boundary_edges], dtype=np.uint32)
     space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
     laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
@@ -122,9 +122,8 @@ def generate_vertices_and_trigs():
     solve_bvp(bilinearform, linearform, u, space)
     #ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
     coefficient_vector = []
-    for i, element in enumerate(space.elements):
-        coefficient_vector.append(list(u[space.dofs[i]].flatten()))
-        coefficient_vector[-1].extend([0])
+    for dofs_i in space.dofs:
+        coefficient_vector.append(list(u[dofs_i].flatten()))
     return vertices, trigs, edges, trigs_edges, trigs_regions, boundary_edges, mesh, coefficient_vector
 
 

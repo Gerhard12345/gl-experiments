@@ -24,8 +24,8 @@ flat in uint vTriangleIndex;
 
 uniform int n_vertices;
 
-const int COEFFICIENT_COUNT = 4;
-const int VEC4_COUNT = COEFFICIENT_COUNT / 4;
+const int p = 3;
+const int COEFFICIENT_COUNT = 3 * p + int((p - 2) * (p - 1) / 2);
 
 // Speicherpuffer für die globalen FEM-Knotenkoordinaten
 layout(std430, binding = 0) readonly buffer NodeBuffer {
@@ -48,7 +48,7 @@ layout(std430, binding = 4) readonly buffer BoundaryEdgesBuffer {
 };
 
 layout(std430, binding = 5) readonly buffer CoefficientVectorBuffer {
-    vec4 coefficient_vector[][VEC4_COUNT];
+    float coefficient_vector[][COEFFICIENT_COUNT];
 };
 
 layout(std430, binding = 3) readonly buffer HighlightBuffer {
@@ -78,6 +78,27 @@ vec3 jetColor(float value) {
     );
 }
 
+void edge_based_polynomials(int edges[2], inout float shape_vector[COEFFICIENT_COUNT])
+{
+    for(int i=3;i<COEFFICIENT_COUNT;i++)
+        shape_vector[i] = 0.0;
+}
+
+void compute_shape(out float shape_vector[COEFFICIENT_COUNT])
+{
+    const int[3][2] edges = {{1, 2}, {0, 2}, {0, 1}};
+    shape_vector[0] = vBarycentric.x;
+    shape_vector[1] = vBarycentric.y;
+    shape_vector[2] = vBarycentric.z;
+    if (p == 1)
+    {
+        return;
+    }
+    for(int edge = 0;edge<3;edge++)
+    {
+        edge_based_polynomials(edges[edge], shape_vector);
+    }
+}
 
 
 void main() {
@@ -98,11 +119,11 @@ void main() {
             faceColor = vec4(0.8, 0.15, 0.15, 1.0);
         }        
         
-        vec4 shape_vector[VEC4_COUNT];
-        shape_vector[0] = vec4(vBarycentric,0.0);
+        float shape_vector[COEFFICIENT_COUNT];
+        compute_shape(shape_vector);
         float scalar_product = 0.0;
-        for (int i = 0; i < VEC4_COUNT; ++i) {
-           scalar_product += dot(coefficient_vector[vTriangleIndex][i], shape_vector[i]);
+        for (int i = 0; i < COEFFICIENT_COUNT; ++i) {
+           scalar_product += coefficient_vector[vTriangleIndex][i] * shape_vector[i];
         }
 
         faceColor = vec4(jetColor(scalar_product), 1.0);

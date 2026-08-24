@@ -152,14 +152,6 @@ class GLWidget(QOpenGLWidget):
 
     def prepare_scene_in_background(self):
         """Prepare the scene data in a background thread."""
-        scene = self.scene_factory()
-        lights = self.lights_factory()
-        camera = Camera(eye=[0, 4, 24], at=[0, 0, 0], up=[0, 1, 0])
-        self.scene = scene
-        self.lights = lights
-        self.camera = camera
-        logger.info("Scene prepared, creating vertex buffer")
-
         self._scene_thread = QThread(self)
         self._scene_worker = ScenePreparationWorker(self.scene_factory, self.lights_factory)
         self._scene_worker.moveToThread(self._scene_thread)
