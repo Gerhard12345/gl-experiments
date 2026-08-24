@@ -69,7 +69,7 @@ def generate_vertices():
     set_boundary_values(u, space, g)
 
     solve_bvp(bilinearform, linearform, u, space)
-    #ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
+    # ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
 
 
 class FemMesh(Object3d):
@@ -120,7 +120,7 @@ def generate_vertices_and_trigs():
     set_boundary_values(u, space, g)
 
     solve_bvp(bilinearform, linearform, u, space)
-    #ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
+    # ax, mini, maxi = show_grid_function(u, space, vrange=(-6.75, 0.25), n_subdivision=16)
     coefficient_vector = []
     for dofs_i in space.dofs:
         coefficient_vector.append(list(u[dofs_i].flatten()))
