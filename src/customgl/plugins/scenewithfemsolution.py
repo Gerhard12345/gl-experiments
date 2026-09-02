@@ -88,7 +88,7 @@ class FemMesh(Object3d):
 def generate_vertices_and_trigs():
     # singleslit = SingleSlitGeometryWith3Domains()
     # mesh = generate_mesh(singleslit, max_gradient=0.4)
-    doubleslit = DoubleSlitGeometry()
+    doubleslit = DoubleSlitGeometry(slit_height=2, slit_distance=5, h_plate=1.0, h_domain=3, h_outer_bnd=3.0)
     mesh = generate_mesh(doubleslit, max_gradient=0.75)
 
     vertices = np.array(
@@ -108,9 +108,9 @@ def generate_vertices_and_trigs():
     edges[:, :2] = edge_indices
     edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
     edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
-    order = 3
+    order = 2
     boundary_edges = np.array([boundary_edge.global_edge_nr for boundary_edge in mesh.boundary_edges], dtype=np.uint32)
-    space = H1Space(mesh, order, dirichlet_indices=[1, 2, 3, 4])
+    space = H1Space(mesh, order, dirichlet_indices=[1, 4])
     laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)
     bilinearform = BilinearForm([laplace])
     linearform = LinearForm([])
@@ -142,7 +142,7 @@ class SceneWithInstancedFemSolution(Scene):
         helper = Trig(position=[0, 0, 0], scale=[1, 1, 1], material=Material())
 
         highlight_data = np.zeros((len(trigs), 4), dtype=np.float32)
-        self.selected_triangle_index = 400
+        self.selected_triangle_index = 0
         highlight_data[self.selected_triangle_index, :] = 1.0
 
         grouped_data = np.zeros((len(trigs), 12), dtype=np.uint32)

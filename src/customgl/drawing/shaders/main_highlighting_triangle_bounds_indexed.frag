@@ -24,8 +24,10 @@ flat in uint vTriangleIndex;
 
 uniform int n_vertices;
 
-const int p = 3;
+const int p = 2;
 const int COEFFICIENT_COUNT = 3 * p + int((p - 2) * (p - 1) / 2);
+const int COEFFICIENT_COUNT_NODES = 3;
+const int COEFFICIENT_COUNT_EDGE = p - 1;
 
 // Speicherpuffer für die globalen FEM-Knotenkoordinaten
 layout(std430, binding = 0) readonly buffer NodeBuffer {
@@ -69,7 +71,12 @@ float edgeFactor(float w) {
 }
 
 vec3 jetColor(float value) {
-    float normalizedValue = clamp((value + 300.0) / 600.0, 0.0, 1.0);
+    const int n_colors = 9;
+    const float maximum_value = 300.0;
+    const float minimum_value = -300.0;
+    float normalizedValue = clamp((value - minimum_value) / (maximum_value - minimum_value), 0.0, 1.0);
+    int colorIndex = min(int(normalizedValue * float(n_colors)), n_colors - 1);
+    normalizedValue = float(colorIndex) / float(n_colors - 1);
 
     return vec3(
         clamp(1.5 - abs(4.0 * normalizedValue - 3.0), 0.0, 1.0),
@@ -78,10 +85,85 @@ vec3 jetColor(float value) {
     );
 }
 
-void edge_based_polynomials(int edges[2], inout float shape_vector[COEFFICIENT_COUNT])
+void jacobi_polynomials(float x, float alpha, inout float edge_shape[p + 1])
 {
-    for(int i=3;i<COEFFICIENT_COUNT;i++)
-        shape_vector[i] = 0.0;
+    for(int i=0;i<p + 1;i++)
+        edge_shape[i] = 0.0;
+
+    edge_shape[0] = 1;
+    if(p == 0)
+        return;
+    edge_shape[1] = 0.5 * (alpha + (alpha + 2) * x);
+    float alpha2 = alpha*alpha;
+    for(int j=1;j<p;j++)
+    {
+        float a_1 = (2 * j + alpha + 1) / ((2 * j + 2) * (j + alpha + 1) * (2 * j + alpha));
+        float a_2 = (2 * j + alpha + 2) * (2 * j + alpha);
+        float a_3 = j * (j + alpha) * (2 * j + alpha + 2) / ((j + 1) * (j + alpha + 1) * (2 * j + alpha));
+        edge_shape[j + 1] = a_1 * (a_2 * x + alpha2) * edge_shape[j] - a_3 * edge_shape[j - 1];
+    }
+}
+
+void integrated_jacobi_polynomials(float x, float alpha, out float integrated_jacobi_polynomial[p + 1])
+{
+    for(int i=0;i<p + 1;i++)
+        integrated_jacobi_polynomial[i] = 0.0;
+    
+    integrated_jacobi_polynomial[0] = 1;
+    if(p == 0)
+        return;
+    integrated_jacobi_polynomial[1] = x + 1;
+    if(p == 1)
+        return;
+    float jacobi_poly_vals[p+1];
+    jacobi_polynomials(x, alpha, jacobi_poly_vals);
+    for(int  j=2;j<p+1;j++)
+    {
+        float a_1 = (2 * j + 2 * alpha) / ((2 * j + alpha - 1) * (2 * j + alpha));
+        float a_2 = 2 * alpha / ((2 * j + alpha - 2) * (2 * j + alpha));
+        float a_3 = (2 * j - 2) / ((2 * j + alpha - 1) * (2 * j + alpha - 2));
+        integrated_jacobi_polynomial[j] = a_1 * jacobi_poly_vals[j] + a_2 * jacobi_poly_vals[j - 1] - a_3 * jacobi_poly_vals[j - 2];
+    }
+}
+
+void edge_based_polynomials(int edges[2], int first_edge_coefficient_for_current_edge, inout float shape_vector[COEFFICIENT_COUNT])
+{
+    float l1 = vBarycentric[edges[1]] + vBarycentric[edges[0]];
+    float l2 = vBarycentric[edges[1]] - vBarycentric[edges[0]];
+    if (trigs[vTriangleIndex].points[edges[0]] > trigs[vTriangleIndex].points[edges[1]])
+    {
+        l2 = -l2;
+    }
+    float x_eval = l2 / l1;
+    float integrated_jacobi_polynomial[p + 1];
+    integrated_jacobi_polynomials(x_eval, 0.0, integrated_jacobi_polynomial);
+    for(int i=0; i < p - 1; i++)
+    {
+        shape_vector[first_edge_coefficient_for_current_edge + i] = integrated_jacobi_polynomial[i + 2] * pow(l1, i+2);
+    }
+}
+
+void bubble_functions(int first_bubble_coefficient, inout float shape_vector[COEFFICIENT_COUNT])
+{
+    if (p < 3)
+    {
+        return;
+    }
+
+    float l1 = 2.0 * vBarycentric[0] - 1.0;
+    int bubble_coefficient = first_bubble_coefficient;
+    for (int i = 2; i < p; i++)
+    {
+        int bubble_order = p - i;
+        float h_values[p + 1];
+        integrated_jacobi_polynomials(l1, float(2 * i - 1), h_values);
+        float edge_factor = shape_vector[3 + i - 2];
+        for (int j = 0; j < bubble_order; j++)
+        {
+            shape_vector[bubble_coefficient + j] = edge_factor * h_values[j + 1];
+        }
+        bubble_coefficient += bubble_order;
+    }
 }
 
 void compute_shape(out float shape_vector[COEFFICIENT_COUNT])
@@ -94,10 +176,13 @@ void compute_shape(out float shape_vector[COEFFICIENT_COUNT])
     {
         return;
     }
+    int first_edge_dof = COEFFICIENT_COUNT_NODES;
     for(int edge = 0;edge<3;edge++)
     {
-        edge_based_polynomials(edges[edge], shape_vector);
+        edge_based_polynomials(edges[edge], first_edge_dof, shape_vector);
+        first_edge_dof += COEFFICIENT_COUNT_EDGE;
     }
+    bubble_functions(3 * p, shape_vector);
 }
 
 
