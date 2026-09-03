@@ -108,7 +108,7 @@ def generate_vertices_and_trigs():
     edges[:, :2] = edge_indices
     edges[:, 2] = np.array([edge.is_boundary_edge for edge in mesh.edges], dtype=np.uint32)
     edges[:, 3] = np.array([edge.region for edge in mesh.edges], dtype=np.uint32)
-    order = 2
+    order = 6
     boundary_edges = np.array([boundary_edge.global_edge_nr for boundary_edge in mesh.boundary_edges], dtype=np.uint32)
     space = H1Space(mesh, order, dirichlet_indices=[1, 4])
     laplace = Laplace(ConstantCoefficientFunction(1), space, is_boundary=False)

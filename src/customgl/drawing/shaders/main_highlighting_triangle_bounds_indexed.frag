@@ -24,7 +24,7 @@ flat in uint vTriangleIndex;
 
 uniform int n_vertices;
 
-const int p = 2;
+const int p = 6;
 const int COEFFICIENT_COUNT = 3 * p + int((p - 2) * (p - 1) / 2);
 const int COEFFICIENT_COUNT_NODES = 3;
 const int COEFFICIENT_COUNT_EDGE = p - 1;
@@ -71,7 +71,7 @@ float edgeFactor(float w) {
 }
 
 vec3 jetColor(float value) {
-    const int n_colors = 9;
+    const int n_colors = 920;
     const float maximum_value = 300.0;
     const float minimum_value = -300.0;
     float normalizedValue = clamp((value - minimum_value) / (maximum_value - minimum_value), 0.0, 1.0);
